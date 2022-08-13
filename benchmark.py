@@ -16,10 +16,12 @@
 
     Environment variables:
 
-    BENCHMARK: the input file to feed pyte's Stream and render on the Screen
+    BENCHMARK: the input file to feed termscraper's Stream and render on the Screen
     GEOMETRY: the dimensions of the screen with format "<lines>x<cols>" (default 24x80)
 
-    :copyright: (c) 2016-2021 by pyte authors and contributors,
+    :copyright: (c) 2016-2021 by termscraper authors and contributors,
+                    see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
                     see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
@@ -34,7 +36,7 @@ try:
 except ImportError:
     sys.exit("``perf`` not found. Try installing it via ``pip install perf``.")
 
-import pyte
+import termscraper
 
 def setup(path, screen_cls, columns, lines, optimize_conf):
     with io.open(path, "rb") as handle:
@@ -48,7 +50,7 @@ def setup(path, screen_cls, columns, lines, optimize_conf):
                 }
 
     screen = screen_cls(columns, lines, **extra_args)
-    stream = pyte.ByteStream(screen)
+    stream = termscraper.ByteStream(screen)
 
     return data, screen, stream
 
@@ -87,7 +89,7 @@ if __name__ == "__main__":
         }
 
     benchmark_name = os.path.basename(benchmark)
-    for screen_cls in [pyte.Screen, pyte.HistoryScreen]:
+    for screen_cls in [termscraper.Screen, termscraper.HistoryScreen]:
         screen_cls_name = screen_cls.__name__
         for make_test in (make_stream_feed_benchmark, make_screen_display_benchmark, make_screen_reset_benchmark, make_screen_resize_half_benchmark):
             scenario = make_test.__name__[5:-10] # remove make_ and _benchmark
