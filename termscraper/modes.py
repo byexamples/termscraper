@@ -36,7 +36,6 @@ LNM = 20
 #: old display characters at the cursor position.
 IRM = 4
 
-
 # Private modes.
 # ..............
 

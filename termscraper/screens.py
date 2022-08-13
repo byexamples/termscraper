@@ -41,12 +41,7 @@ from bisect import bisect_left, bisect_right
 
 from wcwidth import wcwidth
 
-from . import (
-    charsets as cs,
-    control as ctrl,
-    graphics as g,
-    modes as mo
-)
+from . import (charsets as cs, control as ctrl, graphics as g, modes as mo)
 from .streams import Stream
 
 wcwidth = lru_cache(maxsize=4096)(wcwidth)
@@ -55,35 +50,38 @@ wcwidth = lru_cache(maxsize=4096)(wcwidth)
 Margins = namedtuple("Margins", "top bottom")
 
 #: A container for savepoint, created on :data:`~termscraper.escape.DECSC`.
-Savepoint = namedtuple("Savepoint", [
-    "cursor",
-    "g0_charset",
-    "g1_charset",
-    "charset",
-    "origin",
-    "wrap"
-])
+Savepoint = namedtuple(
+    "Savepoint",
+    ["cursor", "g0_charset", "g1_charset", "charset", "origin", "wrap"]
+)
 
-CharStyle = namedtuple("CharStyle", [
-    "fg",
-    "bg",
-    "bold",
-    "italics",
-    "underscore",
-    "strikethrough",
-    "reverse",
-    "blink",
-])
+CharStyle = namedtuple(
+    "CharStyle", [
+        "fg",
+        "bg",
+        "bold",
+        "italics",
+        "underscore",
+        "strikethrough",
+        "reverse",
+        "blink",
+    ]
+)
 
-class LineStats(namedtuple("_LineStats", [
-    "empty",
-    "chars",
-    "columns",
-    "occupancy",
-    "min",
-    "max",
-    "span",
-    ])):
+
+class LineStats(
+    namedtuple(
+        "_LineStats", [
+            "empty",
+            "chars",
+            "columns",
+            "occupancy",
+            "min",
+            "max",
+            "span",
+        ]
+    )
+):
     """
     :class:`~termscraper.screens.LineStats` contains some useful statistics
     about a single line in the screen to understand how the terminal program
@@ -124,31 +122,37 @@ class LineStats(namedtuple("_LineStats", [
     This is not part of the stable API so it may change
     between version of termscraper.
     """
-
     def __repr__(self):
         if self.empty:
             return "chars: {0: >3}/{1} ({2:.2f})".format(
-                    self.chars, self.columns, self.occupancy,
-                    )
+                self.chars,
+                self.columns,
+                self.occupancy,
+            )
         else:
             return "chars: {0: >3}/{1} ({2:.2f}); range: [{3: >3} - {4: >3}], len: {5: >3} ({6:.2f})".format(
-                    self.chars, self.columns, self.occupancy,
-                    self.min, self.max, self.span, self.chars/self.span
-                    )
+                self.chars, self.columns, self.occupancy, self.min, self.max,
+                self.span, self.chars / self.span
+            )
 
-class BufferStats(namedtuple("_BufferStats", [
-    "empty",
-    "entries",
-    "columns",
-    "lines",
-    "falses",
-    "blanks",
-    "occupancy",
-    "min",
-    "max",
-    "span",
-    "line_stats",
-    ])):
+
+class BufferStats(
+    namedtuple(
+        "_BufferStats", [
+            "empty",
+            "entries",
+            "columns",
+            "lines",
+            "falses",
+            "blanks",
+            "occupancy",
+            "min",
+            "max",
+            "span",
+            "line_stats",
+        ]
+    )
+):
     """
     :class:`~termscraper.screens.BufferStats` has some statistics about
     the buffer of the screen, a 2d sparse matrix representation of the screen.
@@ -191,13 +195,12 @@ class BufferStats(namedtuple("_BufferStats", [
     This is not part of the stable API so it may change
     between version of termscraper.
     """
-
     def __repr__(self):
         total_chars = sum(stats.chars for _, stats in self.line_stats)
         bstats = "total chars: {0: >3}/{1} ({2:.2f}%)\n".format(
-                total_chars, self.columns*self.lines,
-                total_chars/(self.columns*self.lines)
-                )
+            total_chars, self.columns * self.lines,
+            total_chars / (self.columns * self.lines)
+        )
 
         if self.empty:
             return bstats + \
@@ -258,11 +261,11 @@ class Char:
         "data",
         "width",
         "style",
-        )
+    )
 
     # List the properties of this Char instance including its style's properties
     # The order of this _fields is maintained for backward compatibility
-    _fields = ("data",) + CharStyle._fields + ("width",)
+    _fields = ("data", ) + CharStyle._fields + ("width", )
 
     def __init__(self, data, width, style):
         self.data = data
@@ -270,9 +273,21 @@ class Char:
         self.style = style
 
     @classmethod
-    def from_attributes(cls, data=" ", fg="default", bg="default", bold=False, italics=False, underscore=False,
-                strikethrough=False, reverse=False, blink=False):
-        style = CharStyle(fg, bg, bold, italics, underscore, strikethrough, reverse, blink)
+    def from_attributes(
+        cls,
+        data=" ",
+        fg="default",
+        bg="default",
+        bold=False,
+        italics=False,
+        underscore=False,
+        strikethrough=False,
+        reverse=False,
+        blink=False
+    ):
+        style = CharStyle(
+            fg, bg, bold, italics, underscore, strikethrough, reverse, blink
+        )
         return Char(data, wcwidth(data), style)
 
     @property
@@ -322,13 +337,19 @@ class Char:
         if not isinstance(other, Char):
             raise TypeError()
 
-        return all(getattr(self, name) == getattr(other, name) for name in self._fields)
+        return all(
+            getattr(self, name) == getattr(other, name)
+            for name in self._fields
+        )
 
     def __ne__(self, other):
         if not isinstance(other, Char):
             raise TypeError()
 
-        return any(getattr(self, name) != getattr(other, name) for name in self._fields)
+        return any(
+            getattr(self, name) != getattr(other, name)
+            for name in self._fields
+        )
 
     def __repr__(self):
         r = "'%s'" % self.data
@@ -338,8 +359,10 @@ class Char:
         if self.bg != "default":
             attrs.append("bg=%s" % self.bg)
 
-        for attrname in ['bold', 'italics', 'underscore',
-                'strikethrough', 'reverse', 'blink']:
+        for attrname in [
+            'bold', 'italics', 'underscore', 'strikethrough', 'reverse',
+            'blink'
+        ]:
             val = getattr(self, attrname)
             if val:
                 attrs.append("%s=%s" % (attrname, val))
@@ -379,6 +402,7 @@ class Line(dict):
         for details.
     """
     __slots__ = ('default', )
+
     def __init__(self, default):
         self.default = default
 
@@ -421,14 +445,15 @@ class Line(dict):
         between version of termscraper.
         """
         return LineStats(
-                empty=not bool(self),
-                chars=len(self),
-                columns=screen.columns,
-                occupancy=len(self)/screen.columns,
-                min=min(self) if self else None,
-                max=max(self) if self else None,
-                span=(max(self) - min(self)) if self else None
-                )
+            empty=not bool(self),
+            chars=len(self),
+            columns=screen.columns,
+            occupancy=len(self) / screen.columns,
+            min=min(self) if self else None,
+            max=max(self) if self else None,
+            span=(max(self) - min(self)) if self else None
+        )
+
 
 class Buffer(dict):
     """A 2d matrix representation of the screen.
@@ -443,6 +468,7 @@ class Buffer(dict):
         See :meth:`~termscraper.screens.Buffer.line_at` for details.
     """
     __slots__ = ('_screen', )
+
     def __init__(self, screen):
         self._screen = screen
 
@@ -460,6 +486,7 @@ class Buffer(dict):
             self[y] = line = self._screen.default_line()
             return line
 
+
 class LineView:
     """
     A read-only view of an horizontal line of the screen.
@@ -472,7 +499,8 @@ class LineView:
 
     See :class:`~termscraper.screens.BufferView`.
     """
-    __slots__ = ("_line",)
+    __slots__ = ("_line", )
+
     def __init__(self, line):
         self._line = line
 
@@ -521,6 +549,7 @@ class BufferView:
             print(char.data, char.fg, char.bg)  # access to char's attrs
     """
     __slots__ = ("_buffer", "_screen")
+
     def __init__(self, screen):
         self._screen = screen
         self._buffer = screen._buffer
@@ -535,6 +564,7 @@ class BufferView:
 
     def __len__(self):
         return self._screen.lines
+
 
 class _NullSet(collections.abc.MutableSet):
     """Implementation of a set that it is always empty."""
@@ -555,6 +585,7 @@ class _NullSet(collections.abc.MutableSet):
 
     def update(self, it):
         return
+
 
 class Screen:
     """
@@ -659,7 +690,13 @@ class Screen:
     def default_line(self):
         return Line(self.default_char)
 
-    def __init__(self, columns, lines, track_dirty_lines=True, disable_display_graphic=False):
+    def __init__(
+        self,
+        columns,
+        lines,
+        track_dirty_lines=True,
+        disable_display_graphic=False
+    ):
         self.savepoints = []
         self.columns = columns
         self.lines = lines
@@ -668,16 +705,27 @@ class Screen:
         self.disabled_display_graphic = disable_display_graphic
 
         self._default_style = CharStyle(
-                fg="default", bg="default", bold=False,
-                italics=False, underscore=False,
-                strikethrough=False, reverse=False, blink=False)
-        self._default_style_reversed = self._default_style._replace(reverse=True)
+            fg="default",
+            bg="default",
+            bold=False,
+            italics=False,
+            underscore=False,
+            strikethrough=False,
+            reverse=False,
+            blink=False
+        )
+        self._default_style_reversed = self._default_style._replace(
+            reverse=True
+        )
 
         self.reset()
 
     def __repr__(self):
-        return ("{0}({1}, {2})".format(self.__class__.__name__,
-                                       self.columns, self.lines))
+        return (
+            "{0}({1}, {2})".format(
+                self.__class__.__name__, self.columns, self.lines
+            )
+        )
 
     @property
     def buffer(self):
@@ -694,20 +742,29 @@ class Screen:
         """
         buffer = self._buffer
         return BufferStats(
-                empty=not bool(buffer),
-                entries=len(buffer),
-                columns=self.columns,
-                lines=self.lines,
-                falses=len([line for line in buffer.values() if not line]),
-                blanks=len([line for line in buffer.values() if all(char.data == " " for char in line.values())]),
-                occupancy=len(buffer)/self.lines,
-                min=min(buffer) if buffer else None,
-                max=max(buffer) if buffer else None,
-                span=(max(buffer) - min(buffer)) if buffer else None,
-                line_stats=[(x, line.stats(self)) for x, line in sorted(buffer.items())]
-                )
+            empty=not bool(buffer),
+            entries=len(buffer),
+            columns=self.columns,
+            lines=self.lines,
+            falses=len([line for line in buffer.values() if not line]),
+            blanks=len(
+                [
+                    line for line in buffer.values()
+                    if all(char.data == " " for char in line.values())
+                ]
+            ),
+            occupancy=len(buffer) / self.lines,
+            min=min(buffer) if buffer else None,
+            max=max(buffer) if buffer else None,
+            span=(max(buffer) - min(buffer)) if buffer else None,
+            line_stats=[
+                (x, line.stats(self)) for x, line in sorted(buffer.items())
+            ]
+        )
 
-    def compressed_display(self, lstrip=False, rstrip=False, tfilter=False, bfilter=False):
+    def compressed_display(
+        self, lstrip=False, rstrip=False, tfilter=False, bfilter=False
+    ):
         """A :func:`list` of screen lines as unicode strings with optionally
         the possibility to compress its output striping space and filtering
         empty lines.
@@ -742,7 +799,7 @@ class Screen:
         padding = " "
 
         non_empty_y = sorted(self._buffer.items())
-        prev_y = non_empty_y[0][0]-1 if tfilter and non_empty_y else -1
+        prev_y = non_empty_y[0][0] - 1 if tfilter and non_empty_y else -1
         output = []
         columns = self.columns
         for y, line in non_empty_y:
@@ -753,7 +810,7 @@ class Screen:
 
             non_empty_x = sorted(line.items())
             is_wide_char = False
-            prev_x = non_empty_x[0][0]-1 if lstrip and non_empty_x else -1
+            prev_x = non_empty_x[0][0] - 1 if lstrip and non_empty_x else -1
             display_line = []
             for x, cell in non_empty_x:
                 gap = x - (prev_x + 1)
@@ -1020,7 +1077,8 @@ class Screen:
            characters are rendered into two consecutive character containers.
         """
         data = data.translate(
-            self.g1_charset if self.charset else self.g0_charset)
+            self.g1_charset if self.charset else self.g0_charset
+        )
 
         # Fetch these attributes to avoid a lookup on each iteration
         # of the for-loop.
@@ -1101,7 +1159,7 @@ class Screen:
                 # A two-cell character has a stub slot after it.
                 write_data(cursor_x, char, char_width, style)
                 if cursor_x + 1 < columns:
-                    write_data(cursor_x+1, "", 0, style)
+                    write_data(cursor_x + 1, "", 0, style)
             elif char_width == 0 and unicodedata.combining(char):
                 # A zero-cell character is combined with the previous
                 # character either on this or preceding line.
@@ -1176,7 +1234,7 @@ class Screen:
 
             to_move = non_empty_y[begin:end]
             for y in to_move:
-                buffer[y-1] = pop(y)
+                buffer[y - 1] = pop(y)
 
             # TODO: mark only the lines within margins?
             # we could mark "(y-1, y) for y in to_move"
@@ -1206,7 +1264,7 @@ class Screen:
 
             to_move = non_empty_y[begin:end]
             for y in reversed(to_move):
-                buffer[y+1] = pop(y)
+                buffer[y + 1] = pop(y)
 
             # TODO: mark only the lines within margins?
             # we could mark "(y+1, y) for y in to_move"
@@ -1247,12 +1305,12 @@ class Screen:
 
     def save_cursor(self):
         """Push the current cursor position onto the stack."""
-        self.savepoints.append(Savepoint(copy.deepcopy(self.cursor),
-                                         self.g0_charset,
-                                         self.g1_charset,
-                                         self.charset,
-                                         mo.DECOM in self.mode,
-                                         mo.DECAWM in self.mode))
+        self.savepoints.append(
+            Savepoint(
+                copy.deepcopy(self.cursor), self.g0_charset, self.g1_charset,
+                self.charset, mo.DECOM in self.mode, mo.DECAWM in self.mode
+            )
+        )
 
     def restore_cursor(self):
         """Set the current cursor position to whatever cursor is on top
@@ -1300,10 +1358,12 @@ class Screen:
             pop = buffer.pop
             non_empty_y = sorted(buffer)
             move_begin = bisect_left(non_empty_y, self.cursor.y)
-            drop_begin = bisect_left(non_empty_y, (bottom + 1) - count, move_begin)
+            drop_begin = bisect_left(
+                non_empty_y, (bottom + 1) - count, move_begin
+            )
             margin_begin = bisect_left(non_empty_y, bottom + 1, drop_begin)
 
-            list(map(pop, non_empty_y[drop_begin:margin_begin])) # drop
+            list(map(pop, non_empty_y[drop_begin:margin_begin]))  # drop
 
             for y in reversed(non_empty_y[move_begin:drop_begin]):
                 buffer[y + count] = pop(y)  # move
@@ -1330,9 +1390,11 @@ class Screen:
             non_empty_y = sorted(buffer)
             drop_begin = bisect_left(non_empty_y, self.cursor.y)
             margin_begin = bisect_left(non_empty_y, bottom + 1, drop_begin)
-            move_begin = bisect_left(non_empty_y, self.cursor.y + count, drop_begin, margin_begin)
+            move_begin = bisect_left(
+                non_empty_y, self.cursor.y + count, drop_begin, margin_begin
+            )
 
-            list(map(pop, non_empty_y[drop_begin:move_begin])) # drop
+            list(map(pop, non_empty_y[drop_begin:move_begin]))  # drop
 
             for y in non_empty_y[move_begin:margin_begin]:
                 buffer[y - count] = pop(y)  # move
@@ -1374,7 +1436,7 @@ class Screen:
         # |---------------|-------|
         #   0   1   x   3   4   5      count = 2  (x means empty)
         #
-        list(map(pop, non_empty_x[drop_begin:]))   # drop
+        list(map(pop, non_empty_x[drop_begin:]))  # drop
 
         # cursor.x
         # |
@@ -1383,8 +1445,6 @@ class Screen:
         #   x   x   0   1   x   3      count = 2  (x means empty)
         for x in reversed(non_empty_x[move_begin:drop_begin]):
             line[x + count] = pop(x)  # move
-
-
 
     def delete_characters(self, count=None):
         """Delete the indicated # of characters, starting with the
@@ -1409,7 +1469,9 @@ class Screen:
 
         non_empty_x = sorted(line)
         drop_begin = bisect_left(non_empty_x, self.cursor.x)
-        move_begin = bisect_left(non_empty_x, self.cursor.x + count, drop_begin)
+        move_begin = bisect_left(
+            non_empty_x, self.cursor.x + count, drop_begin
+        )
 
         list(map(pop, non_empty_x[drop_begin:move_begin]))  # drop
 
@@ -1420,7 +1482,7 @@ class Screen:
         #   0   1   x   3   4   x      count = 2  (x means empty)
         #   x   x   x   3   4   x      after the drop
         #   x   3   4   x   x   x      after the move
-        for x in  non_empty_x[move_begin:]:
+        for x in non_empty_x[move_begin:]:
             line[x - count] = pop(x)  # move
 
     def erase_characters(self, count=None):
@@ -1463,8 +1525,9 @@ class Screen:
             style = self.cursor.attrs.style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
-            for x in range(self.cursor.x,
-                           min(self.cursor.x + count, self.columns)):
+            for x in range(
+                self.cursor.x, min(self.cursor.x + count, self.columns)
+            ):
                 write_data(x, data, width, style)
 
     def erase_in_line(self, how=0, private=False):
@@ -1566,7 +1629,7 @@ class Screen:
             pop = buffer.pop
             non_empty_y = sorted(buffer)
             begin = bisect_left(non_empty_y, top)  # inclusive
-            end = bisect_left(non_empty_y, bottom, begin) # exclusive
+            end = bisect_left(non_empty_y, bottom, begin)  # exclusive
 
             list(map(pop, non_empty_y[begin:end]))
 
@@ -1788,7 +1851,7 @@ class Screen:
                 key = "fg" if attr == g.FG_256 else "bg"
                 try:
                     n = attrs.pop()
-                    if n == 5:    # 256.
+                    if n == 5:  # 256.
                         m = attrs.pop()
                         replace[key] = g.FG_BG_256[m]
                     elif n == 2:  # 24bit.
@@ -1796,7 +1859,8 @@ class Screen:
                         # supported in quite a few terminals. See discussion
                         # here https://gist.github.com/XVilka/8346728.
                         replace[key] = "{0:02x}{1:02x}{2:02x}".format(
-                            attrs.pop(), attrs.pop(), attrs.pop())
+                            attrs.pop(), attrs.pop(), attrs.pop()
+                        )
                 except IndexError:
                     pass
 
@@ -1825,7 +1889,7 @@ class Screen:
 
         .. versionadded:: 0.5.0
         """
-        if mode == 5:    # Request for terminal status.
+        if mode == 5:  # Request for terminal status.
             self.write_process_input(ctrl.CSI + "0n")
         elif mode == 6:  # Request for cursor position.
             x = self.cursor.x + 1
@@ -1869,7 +1933,8 @@ class DiffScreen(Screen):
         warnings.warn(
             "The functionality of ``DiffScreen` has been merged into "
             "``Screen`` and will be removed in 0.8.0. Please update "
-            "your code accordingly.", DeprecationWarning)
+            "your code accordingly.", DeprecationWarning
+        )
 
         super(DiffScreen, self).__init__(*args, **kwargs)
 
@@ -1919,17 +1984,26 @@ class HistoryScreen(Screen):
     _wrapped = set(Stream.events)
     _wrapped.update(["next_page", "prev_page"])
 
-    def __init__(self, columns, lines, history=100, ratio=.5,
-                 track_dirty_lines=True, disable_display_graphic=False):
-        self.history = History(deque(maxlen=history),
-                               deque(maxlen=history),
-                               float(ratio),
-                               history,
-                               history)
+    def __init__(
+        self,
+        columns,
+        lines,
+        history=100,
+        ratio=.5,
+        track_dirty_lines=True,
+        disable_display_graphic=False
+    ):
+        self.history = History(
+            deque(maxlen=history), deque(maxlen=history), float(ratio),
+            history, history
+        )
 
-        super(HistoryScreen, self).__init__(columns, lines,
-                track_dirty_lines=track_dirty_lines,
-                disable_display_graphic=disable_display_graphic)
+        super(HistoryScreen, self).__init__(
+            columns,
+            lines,
+            track_dirty_lines=track_dirty_lines,
+            disable_display_graphic=disable_display_graphic
+        )
 
     def _make_wrapper(self, event, handler):
         def inner(*args, **kwargs):
@@ -1937,6 +2011,7 @@ class HistoryScreen(Screen):
             result = handler(*args, **kwargs)
             self.after_event(event)
             return result
+
         return inner
 
     def __getattribute__(self, attr):
@@ -1975,8 +2050,8 @@ class HistoryScreen(Screen):
         # If we're at the bottom of the history buffer and `DECTCEM`
         # mode is set -- show the cursor.
         self.cursor.hidden = not (
-            self.history.position == self.history.size and
-            mo.DECTCEM in self.mode
+            self.history.position == self.history.size
+            and mo.DECTCEM in self.mode
         )
 
     def _reset_history(self):
@@ -2024,8 +2099,10 @@ class HistoryScreen(Screen):
         history on page switch.
         """
         if self.history.position > self.lines and self.history.top:
-            mid = min(len(self.history.top),
-                      int(math.ceil(self.lines * self.history.ratio)))
+            mid = min(
+                len(self.history.top),
+                int(math.ceil(self.lines * self.history.ratio))
+            )
 
             bufferview = self.buffer
             buffer = self._buffer
@@ -2034,7 +2111,7 @@ class HistoryScreen(Screen):
             self.history.bottom.extendleft(
                 bufferview[y]
                 for y in range(self.lines - 1, self.lines - mid - 1, -1)
-                )
+            )
 
             self.history = self.history \
                 ._replace(position=self.history.position - mid)
@@ -2091,17 +2168,16 @@ class HistoryScreen(Screen):
     def next_page(self):
         """Move the screen page down through the history buffer."""
         if self.history.position < self.history.size and self.history.bottom:
-            mid = min(len(self.history.bottom),
-                      int(math.ceil(self.lines * self.history.ratio)))
+            mid = min(
+                len(self.history.bottom),
+                int(math.ceil(self.lines * self.history.ratio))
+            )
 
             bufferview = self.buffer
             buffer = self._buffer
             pop = buffer.pop
 
-            self.history.top.extend(
-                    bufferview[y]
-                    for y in range(mid)
-                    )
+            self.history.top.extend(bufferview[y] for y in range(mid))
 
             self.history = self.history \
                 ._replace(position=self.history.position + mid)

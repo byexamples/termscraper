@@ -119,18 +119,23 @@ class Stream:
     }
 
     #: A set of all events dispatched by the stream.
-    events = frozenset(itertools.chain(
-        basic.values(), escape.values(), sharp.values(), csi.values(),
-        ["define_charset"],
-        ["set_icon_name", "set_title"],  # OSC.
-        ["draw", "debug"]))
+    events = frozenset(
+        itertools.chain(
+            basic.values(),
+            escape.values(),
+            sharp.values(),
+            csi.values(),
+            ["define_charset"],
+            ["set_icon_name", "set_title"],  # OSC.
+            ["draw", "debug"]
+        )
+    )
 
     #: A regular expression pattern matching everything what can be
     #: considered plain text.
     _special = set([ctrl.ESC, ctrl.CSI_C1, ctrl.NUL, ctrl.DEL, ctrl.OSC_C1])
     _special.update(basic)
-    _text_pattern = re.compile(
-        "[^" + "".join(map(re.escape, _special)) + "]+")
+    _text_pattern = re.compile("[^" + "".join(map(re.escape, _special)) + "]+")
     del _special
 
     def __init__(self, screen=None, strict=True):
@@ -147,10 +152,12 @@ class Stream:
         :param termscraper.screens.Screen screen: a screen to attach to.
         """
         if self.listener is not None:
-            warnings.warn("As of version 0.6.0 the listener queue is "
-                          "restricted to a single element. Existing "
-                          "listener {0} will be replaced."
-                          .format(self.listener), DeprecationWarning)
+            warnings.warn(
+                "As of version 0.6.0 the listener queue is "
+                "restricted to a single element. Existing "
+                "listener {0} will be replaced.".format(self.listener),
+                DeprecationWarning
+            )
 
         if self.strict:
             for event in self.events:
@@ -229,14 +236,19 @@ class Stream:
         SP_OR_GT = ctrl.SP + ">"
         NUL_OR_DEL = ctrl.NUL + ctrl.DEL
         CAN_OR_SUB = ctrl.CAN + ctrl.SUB
-        ALLOWED_IN_CSI = "".join([ctrl.BEL, ctrl.BS, ctrl.HT, ctrl.LF,
-                                  ctrl.VT, ctrl.FF, ctrl.CR])
+        ALLOWED_IN_CSI = "".join(
+            [ctrl.BEL, ctrl.BS, ctrl.HT, ctrl.LF, ctrl.VT, ctrl.FF, ctrl.CR]
+        )
         OSC_TERMINATORS = set([ctrl.ST_C0, ctrl.ST_C1, ctrl.BEL])
 
         def create_dispatcher(mapping):
-            return defaultdict(lambda: debug, dict(
-                (event, getattr(listener, attr))
-                for event, attr in mapping.items()))
+            return defaultdict(
+                lambda: debug,
+                dict(
+                    (event, getattr(listener, attr))
+                    for event, attr in mapping.items()
+                )
+            )
 
         basic_dispatch = create_dispatcher(basic)
         sharp_dispatch = create_dispatcher(self.sharp)
@@ -281,7 +293,7 @@ class Stream:
                         listener.define_charset(code, mode=char)
                     else:
                         escape_dispatch[char]()
-                    continue    # Don't go to CSI.
+                    continue  # Don't go to CSI.
 
             if char in basic:
                 # Ignore shifts in UTF-8 mode. See

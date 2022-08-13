@@ -47,7 +47,6 @@ DECRC = "8"
 #: screen focus and alignment.
 DECALN = "8"
 
-
 # ECMA-48 CSI sequences.
 # ---------------------
 

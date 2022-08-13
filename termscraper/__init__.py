@@ -24,16 +24,18 @@
     :license: LGPL, see LICENSE for more details.
 """
 
-__all__ = ("Screen", "DiffScreen", "HistoryScreen", "DebugScreen",
-           "Stream", "ByteStream")
+__all__ = (
+    "Screen", "DiffScreen", "HistoryScreen", "DebugScreen", "Stream",
+    "ByteStream"
+)
 
 import io
 
 from .screens import Screen, DiffScreen, HistoryScreen, DebugScreen
 from .streams import Stream, ByteStream
 
-
 if __debug__:
+
     def dis(chars):
         """A :func:`dis.dis` for terminals.
 
