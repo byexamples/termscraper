@@ -16,10 +16,17 @@ def consistency_asserts(screen):
         for x in range(screen.columns):
             char = screen.buffer[y][x]
             if char.data:
-                assert wcwidth(char.data[0]) == char.width
+                assert wcwidth(char.data[0]) >= 1
+
+                # TODO: the following fails as there are cases
+                # where in a single cell is a data of two unicodes
+                # but where the second unicode is not a real thing
+                # but a thing that applies to the next unicode
+                # of the next char (think in a accent for example)
+                # Not 100% sure if this is okay or not
+                #assert len(char.data) == 1
             else:
                 assert char.data == ""
-                assert char.width == 0
 
     # we check that no char is outside of the buffer
     # we need to check the internal _buffer for this and do an educated

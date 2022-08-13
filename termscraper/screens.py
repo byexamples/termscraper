@@ -224,10 +224,9 @@ class BufferStats(
 class Char:
     """
     A single styled on-screen character. The character is made
-    of an unicode character (data), its width and its style.
+    of an unicode character (data) and its style.
 
     :param str data: unicode character. Invariant: ``len(data) == 1``.
-    :param bool width: the width in terms of cells to display this char.
     :param CharStyle style: the style of the character.
 
     The :meth:`~termscraper.screens.Char.from_attributes` allows to create
@@ -252,24 +251,22 @@ class Char:
     :param bool blink: flag for rendering the character blinked. Defaults to
                        ``False``.
 
-    The attributes data, width and style of :class:`~termscraper.screens.Char`
+    The attributes data and style of :class:`~termscraper.screens.Char`
     must be considered read-only. Any modification is undefined.
     If you want to modify a :class:`~termscraper.screens.Char`, use the public
     interface of :class:`~termscraper.screens.Screen`.
     """
     __slots__ = (
         "data",
-        "width",
         "style",
     )
 
     # List the properties of this Char instance including its style's properties
     # The order of this _fields is maintained for backward compatibility
-    _fields = ("data", ) + CharStyle._fields + ("width", )
+    _fields = ("data", ) + CharStyle._fields
 
-    def __init__(self, data, width, style):
+    def __init__(self, data, style):
         self.data = data
-        self.width = width
         self.style = style
 
     @classmethod
@@ -328,7 +325,7 @@ class Char:
         return Char(**fields)
 
     def copy(self):
-        return Char(self.data, self.width, self.style)
+        return Char(self.data, self.style)
 
     def as_dict(self):
         return {name: getattr(self, name) for name in self._fields}
@@ -406,19 +403,18 @@ class Line(dict):
     def __init__(self, default):
         self.default = default
 
-    def write_data(self, x, data, width, style):
+    def write_data(self, x, data, style):
         """
-        Update the char at the position x with the new data, width and style.
+        Update the char at the position x with the new data and style.
         If no char is at that position, a new char is created and added
         to the line.
         """
         if x in self:
             char = self[x]
             char.data = data
-            char.width = width
             char.style = style
         else:
-            self[x] = Char(data, width, style)
+            self[x] = Char(data, style)
 
     def char_at(self, x):
         """
@@ -685,7 +681,7 @@ class Screen:
     def default_char(self):
         """An empty character with default foreground and background colors."""
         style = self._default_style_reversed if mo.DECSCNM in self.mode else self._default_style
-        return Char(" ", wcwidth(" "), style)
+        return Char(" ", style)
 
     def default_line(self):
         return Line(self.default_char)
@@ -809,7 +805,6 @@ class Screen:
             prev_y = y
 
             non_empty_x = sorted(line.items())
-            is_wide_char = False
             prev_x = non_empty_x[0][0] - 1 if lstrip and non_empty_x else -1
             display_line = []
             for x, cell in non_empty_x:
@@ -819,12 +814,12 @@ class Screen:
 
                 prev_x = x
 
-                if is_wide_char:  # Skip stub
-                    is_wide_char = False
-                    continue
-                char = cell.data
-                is_wide_char = cell.width == 2
-                display_line.append(char)
+                # note: wide-chars are made of two cells where
+                # the first cell contains the text representation
+                # (unicode) of the char and the second cell is empty
+                # (empty string).
+                # because display_line is later joined, this does not matter
+                display_line.append(cell.data)
 
             gap = columns - (prev_x + 1)
             if gap and not rstrip:
@@ -1154,12 +1149,12 @@ class Screen:
                 self.insert_characters(char_width)
 
             if char_width == 1:
-                write_data(cursor_x, char, char_width, style)
+                write_data(cursor_x, char, style)
             elif char_width == 2:
                 # A two-cell character has a stub slot after it.
-                write_data(cursor_x, char, char_width, style)
+                write_data(cursor_x, char, style)
                 if cursor_x + 1 < columns:
-                    write_data(cursor_x + 1, "", 0, style)
+                    write_data(cursor_x + 1, "", style)
             elif char_width == 0 and unicodedata.combining(char):
                 # A zero-cell character is combined with the previous
                 # character either on this or preceding line.
@@ -1521,14 +1516,13 @@ class Screen:
         else:
             write_data = line.write_data
             data = self.cursor.attrs.data
-            width = self.cursor.attrs.width
             style = self.cursor.attrs.style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
             for x in range(
                 self.cursor.x, min(self.cursor.x + count, self.columns)
             ):
-                write_data(x, data, width, style)
+                write_data(x, data, style)
 
     def erase_in_line(self, how=0, private=False):
         """Erase a line in a specific way.
@@ -1572,12 +1566,11 @@ class Screen:
         else:
             write_data = line.write_data
             data = self.cursor.attrs.data
-            width = self.cursor.attrs.width
             style = self.cursor.attrs.style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
             for x in range(low, high):
-                write_data(x, data, width, style)
+                write_data(x, data, style)
 
     def erase_in_display(self, how=0, *args, **kwargs):
         """Erases display in a specific way.
@@ -1635,13 +1628,12 @@ class Screen:
 
         else:
             data = self.cursor.attrs.data
-            width = self.cursor.attrs.width
             style = self.cursor.attrs.style
             for y in range(top, bottom):
                 line = buffer.line_at(y)
                 write_data = line.write_data
                 for x in range(0, self.columns):
-                    write_data(x, data, width, style)
+                    write_data(x, data, style)
 
         if how == 0 or how == 1:
             self.erase_in_line(how)
@@ -1808,7 +1800,7 @@ class Screen:
         for y in range(self.lines):
             line = self._buffer.line_at(y)
             for x in range(self.columns):
-                line.write_data(x, "E", wcwidth("E"), style)
+                line.write_data(x, "E", style)
 
     def select_graphic_rendition(self, *attrs):
         """Set display attributes.
