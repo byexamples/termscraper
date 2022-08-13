@@ -2,37 +2,34 @@
 
 ::
 
-                       _
-                      | |
-         _ __   _   _ | |_  ___
-        | '_ \ | | | || __|/ _ \
-        | |_) || |_| || |_|  __/
-        | .__/  \__, | \__|\___|
-        | |      __/ |
-        |_|     |___/      0.8.1
+     _____                       _____
+    |_   _|                     /  ___|
+      | |  ___  _ __  _ __ ___  \ `--.   ___  _ __  __ _  _ __    ___  _ __
+      | | / _ \| '__|| '_ ` _ \  `--. \ / __|| '__|/ _` || '_ \  / _ \| '__|
+      | ||  __/| |   | | | | | |/\__/ /| (__ | |  | (_| || |_) ||  __/| |
+      \_/ \___||_|   |_| |_| |_|\____/  \___||_|   \__,_|| .__/  \___||_|
+                                                         | |
+                                                         |_|
 
 
-What is ``pyte``?
------------------
+What is ``termscraper``?
+------------------------
 
 It's an in memory VTXXX-compatible terminal emulator.
 *XXX* stands for a series of video terminals, developed by
 `DEC <http://en.wikipedia.org/wiki/Digital_Equipment_Corporation>`_ between
 1970 and 1995. The first, and probably the most famous one, was VT100
 terminal, which is now a de-facto standard for all virtual terminal
-emulators. ``pyte`` follows the suit.
+emulators.
 
-So, why would one need a terminal emulator library?
+``termscraper`` follows the suit. It is a direct fork of
+`pyte 0.8.1 <http://github.com/selectel/pyte>`_ which in turn it
+is a fork of `vt102 <http://github.com/samfoo/vt102>`_.
 
-* To screen scrape terminal apps, for example ``htop`` or ``aptitude``.
-* To write cross platform terminal emulators; either with a graphical
-  (`xterm <http://invisible-island.net/xterm/>`_,
-  `rxvt <http://www.rxvt.org/>`_) or a web interface, like
-  `AjaxTerm <http://antony.lesuisse.org/software/ajaxterm/>`_.
-* To have fun, hacking on the ancient, poorly documented technologies.
-
-**Note**: ``pyte`` started as a fork of `vt102 <http://github.com/samfoo/vt102>`_,
-which is an incomplete pure Python implementation of VT100 terminal.
+``termscraper`` aims to be used mostly for scraping terminal
+apps like ``htop`` or very long logs from ``tail`` or ``less``
+so it may not support all the features that a full VT100 terminal
+would have.
 
 
 Installation
@@ -40,9 +37,9 @@ Installation
 
 If you have `pip <https://pip.pypa.io/en/stable>`_ you can do the usual::
 
-    pip install pyte
+    pip install termscraper
 
-Otherwise, download the source from `GitHub <https://github.com/selectel/pyte>`_
+Otherwise, download the source from `GitHub <https://github.com/byexamples/termscraper>`_
 and run::
 
     python setup.py install
@@ -50,10 +47,11 @@ and run::
 Similar projects
 ----------------
 
-``pyte`` is not alone in the weird world of terminal emulator libraries,
+``termscraper`` is not alone in the weird world of terminal emulator libraries,
 here's a few other options worth checking out:
 `Termemulator <http://sourceforge.net/projects/termemulator/>`_,
 `pyqonsole <http://hg.logilab.org/pyqonsole/>`_,
 `webtty <http://code.google.com/p/webtty/>`_,
 `AjaxTerm <http://antony.lesuisse.org/software/ajaxterm/>`_ and of course
+`pyte <http://github.com/selectel/pyte>`_ and
 `vt102 <http://github.com/samfoo/vt102>`_.

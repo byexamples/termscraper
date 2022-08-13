@@ -1,11 +1,19 @@
-Authors
-=======
+TermScraper Authors
+-------------------
+
+- Martin Di Paola (@eldipa)
+
+Contributions inherited from pyte and vt102
+-------------------------------------------
+
+TermScraper is a direct fork of pyte 0.8.1.
+
+Thanks to pyte's authors
 
 - George Shuklin
 - Sergei Lebedev
 
-Contributors
-------------
+And thanks to pyte's contributors
 
 - Alexey Shamrin
 - Steve Cohen
@@ -17,4 +25,7 @@ Contributors
 - Byron Roosa
 - Andrew Crozier
 - @eight04
-- Martin Di Paola @eldipa
+
+And thanks to vt102's author
+
+- Sam Gibson (@samfoo)

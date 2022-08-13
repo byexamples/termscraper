@@ -7,7 +7,7 @@ from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-DESCRIPTION = "Simple VTXXX-compatible terminal emulator."
+DESCRIPTION = "Simple VTXXX-compatible terminal emulator scraper."
 
 try:
     with open(os.path.join(here, "README")) as f:
@@ -31,18 +31,18 @@ CLASSIFIERS = [
 ]
 
 
-setup(name="pyte",
+setup(name="termscraper",
       version="0.8.1",
-      packages=["pyte"],
+      packages=["termscraper"],
       install_requires=["wcwidth"],
       setup_requires=["pytest-runner"],
       tests_require=["pytest"],
       platforms=["any"],
 
-      author="Sergei Lebedev",
-      author_email="superbobry@gmail.com",
+      author="Martin Di Paola",
+      author_email='use-github-issues@example.com',
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       classifiers=CLASSIFIERS,
       keywords=["vt102", "vte", "terminal emulator"],
-      url="https://github.com/selectel/pyte")
+      url="https://github.com/byexamples/termscraper")
