@@ -5,3 +5,5 @@ dist/
 .eggs/
 .pytest_cache/
 README.rst
+.release-notes
+.*.swp
