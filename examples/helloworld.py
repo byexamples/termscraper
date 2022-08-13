@@ -2,18 +2,20 @@
     helloworld
     ~~~~~~~~~~
 
-    A minimal working example for :mod:`pyte`.
+    A minimal working example for :mod:`termscraper`.
 
     :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
+                    see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
 
-import pyte
+import termscraper
 
 
 if __name__ == "__main__":
-    screen = pyte.Screen(80, 24)
-    stream = pyte.Stream(screen)
+    screen = termscraper.Screen(80, 24)
+    stream = termscraper.Stream(screen)
     stream.feed("Hello World!")
 
     for idx, line in enumerate(screen.display, 1):

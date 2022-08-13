@@ -1,10 +1,12 @@
-import io
+import io, sys, os
 
 import pytest
 
-import pyte
-from pyte import charsets as cs, control as ctrl, escape as esc
+import termscraper
+from termscraper import charsets as cs, control as ctrl, escape as esc
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
+from asserts import consistency_asserts
 
 class counter:
     def __init__(self):
@@ -34,12 +36,12 @@ class IntentionalException(Exception):
 
 
 def test_basic_sequences():
-    for cmd, event in pyte.Stream.escape.items():
-        screen = pyte.Screen(80, 24)
+    for cmd, event in termscraper.Stream.escape.items():
+        screen = termscraper.Screen(80, 24)
         handler = counter()
         setattr(screen, event, handler)
 
-        stream = pyte.Stream(screen)
+        stream = termscraper.Stream(screen)
         stream.feed(ctrl.ESC)
         assert not handler.count
 
@@ -51,20 +53,20 @@ def test_linefeed():
     # ``linefeed`` is somewhat an exception, there's three ways to
     # trigger it.
     handler = counter()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.linefeed = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.LF + ctrl.VT + ctrl.FF)
     assert handler.count == 3
 
 
 def test_unknown_sequences():
     handler = argcheck()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.debug = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "6;Z")
     assert handler.count == 1
     assert handler.args == (6, 0)
@@ -72,23 +74,23 @@ def test_unknown_sequences():
 
 
 def test_non_csi_sequences():
-    for cmd, event in pyte.Stream.csi.items():
+    for cmd, event in termscraper.Stream.csi.items():
         # a) single param
         handler = argcheck()
-        screen = pyte.Screen(80, 24)
+        screen = termscraper.Screen(80, 24)
         setattr(screen, event, handler)
 
-        stream = pyte.Stream(screen)
+        stream = termscraper.Stream(screen)
         stream.feed(ctrl.ESC + "[5" + cmd)
         assert handler.count == 1
         assert handler.args == (5, )
 
         # b) multiple params, and starts with CSI, not ESC [
         handler = argcheck()
-        screen = pyte.Screen(80, 24)
+        screen = termscraper.Screen(80, 24)
         setattr(screen, event, handler)
 
-        stream = pyte.Stream(screen)
+        stream = termscraper.Stream(screen)
         stream.feed(ctrl.CSI + "5;12" + cmd)
         assert handler.count == 1
         assert handler.args == (5, 12)
@@ -96,12 +98,12 @@ def test_non_csi_sequences():
 
 def test_set_mode():
     bugger = counter()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     handler = argcheck()
     screen.debug = bugger
     screen.set_mode = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "?9;2h")
     assert not bugger.count
     assert handler.count == 1
@@ -111,12 +113,12 @@ def test_set_mode():
 
 def test_reset_mode():
     bugger = counter()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     handler = argcheck()
     screen.debug = bugger
     screen.reset_mode = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "?9;2l")
     assert not bugger.count
     assert handler.count == 1
@@ -125,10 +127,10 @@ def test_reset_mode():
 
 def test_missing_params():
     handler = argcheck()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.cursor_position = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + ";" + esc.HVP)
     assert handler.count == 1
     assert handler.args == (0, 0)
@@ -136,10 +138,10 @@ def test_missing_params():
 
 def test_overflow():
     handler = argcheck()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.cursor_position = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "999999999999999;99999999999999" + esc.HVP)
     assert handler.count == 1
     assert handler.args == (9999, 9999)
@@ -149,11 +151,11 @@ def test_interrupt():
     bugger = argstore()
     handler = argcheck()
 
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.draw = bugger
     screen.cursor_position = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "10;" + ctrl.SUB + "10" + esc.HVP)
 
     assert not handler.count
@@ -164,10 +166,10 @@ def test_interrupt():
 
 def test_control_characters():
     handler = argcheck()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.cursor_position = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "10;\t\t\n\r\n10" + esc.HVP)
 
     assert handler.count == 1
@@ -181,8 +183,8 @@ def test_control_characters():
     (ctrl.OSC_C1, ctrl.ST_C1)
 ])
 def test_set_title_icon_name(osc, st):
-    screen = pyte.Screen(80, 24)
-    stream = pyte.Stream(screen)
+    screen = termscraper.Screen(80, 24)
+    stream = termscraper.Stream(screen)
 
     # a) set only icon name
     stream.feed(osc + "1;foo" + st)
@@ -206,13 +208,13 @@ def test_set_title_icon_name(osc, st):
 
 
 def test_compatibility_api():
-    screen = pyte.Screen(80, 24)
-    stream = pyte.Stream()
+    screen = termscraper.Screen(80, 24)
+    stream = termscraper.Stream()
     stream.attach(screen)
 
     # All of the following shouldn't raise errors.
     # a) adding more than one listener
-    stream.attach(pyte.Screen(80, 24))
+    stream.attach(termscraper.Screen(80, 24))
 
     # b) feeding text
     stream.feed("привет")
@@ -223,16 +225,17 @@ def test_compatibility_api():
 
 def test_define_charset():
     # Should be a noop. All input is UTF8.
-    screen = pyte.Screen(3, 3)
-    stream = pyte.Stream(screen)
+    screen = termscraper.Screen(3, 3)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.ESC + "(B")
     assert screen.display[0] == " " * 3
+    consistency_asserts(screen)
 
 
 def test_non_utf8_shifts():
-    screen = pyte.Screen(3, 3)
+    screen = termscraper.Screen(3, 3)
     handler = screen.shift_in = screen.shift_out = argcheck()
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.use_utf8 = False
     stream.feed(ctrl.SI)
     stream.feed(ctrl.SO)
@@ -240,9 +243,9 @@ def test_non_utf8_shifts():
 
 
 def test_dollar_skip():
-    screen = pyte.Screen(3, 3)
+    screen = termscraper.Screen(3, 3)
     handler = screen.draw = argcheck()
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     stream.feed(ctrl.CSI + "12$p")
     assert handler.count == 0
     stream.feed(ctrl.CSI + "1;2;3;4$x")
@@ -258,7 +261,7 @@ def test_dollar_skip():
 ])
 def test_debug_stream(input, expected):
     output = io.StringIO()
-    stream = pyte.ByteStream(pyte.DebugScreen(to=output))
+    stream = termscraper.ByteStream(termscraper.DebugScreen(to=output))
     stream.feed(input)
 
     output.seek(0)
@@ -273,11 +276,11 @@ def test_handler_exception():
         raise IntentionalException()
 
     handler = argcheck()
-    screen = pyte.Screen(80, 24)
+    screen = termscraper.Screen(80, 24)
     screen.set_mode = failing_handler
     screen.reset_mode = handler
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     with pytest.raises(IntentionalException):
         stream.feed(ctrl.CSI + "?9;2h")
 
@@ -286,18 +289,18 @@ def test_handler_exception():
 
 
 def test_byte_stream_feed():
-    screen = pyte.Screen(20, 1)
+    screen = termscraper.Screen(20, 1)
     screen.draw = handler = argcheck()
 
-    stream = pyte.ByteStream(screen)
+    stream = termscraper.ByteStream(screen)
     stream.feed("Нерусский текст".encode("utf-8"))
     assert handler.count == 1
     assert handler.args == ("Нерусский текст", )
 
 
 def test_byte_stream_define_charset_unknown():
-    screen = pyte.Screen(3, 3)
-    stream = pyte.ByteStream(screen)
+    screen = termscraper.Screen(3, 3)
+    stream = termscraper.ByteStream(screen)
     stream.select_other_charset("@")
     default_g0_charset = screen.g0_charset
     # ``"Z"`` is not supported by Linux terminal, so expect a noop.
@@ -305,20 +308,22 @@ def test_byte_stream_define_charset_unknown():
     stream.feed((ctrl.ESC + "(Z").encode())
     assert screen.display[0] == " " * 3
     assert screen.g0_charset == default_g0_charset
+    consistency_asserts(screen)
 
 
 @pytest.mark.parametrize("charset,mapping", cs.MAPS.items())
 def test_byte_stream_define_charset(charset, mapping):
-    screen = pyte.Screen(3, 3)
-    stream = pyte.ByteStream(screen)
+    screen = termscraper.Screen(3, 3)
+    stream = termscraper.ByteStream(screen)
     stream.select_other_charset("@")
     stream.feed((ctrl.ESC + "(" + charset).encode())
     assert screen.display[0] == " " * 3
     assert screen.g0_charset == mapping
+    consistency_asserts(screen)
 
 
 def test_byte_stream_select_other_charset():
-    stream = pyte.ByteStream(pyte.Screen(3, 3))
+    stream = termscraper.ByteStream(termscraper.Screen(3, 3))
     assert stream.use_utf8  # on by default.
 
     # a) disable utf-8

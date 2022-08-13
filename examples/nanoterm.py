@@ -2,11 +2,13 @@
     nanoterm
     ~~~~~~~~
 
-    An example showing how to feed :class:`~pyte.streams.Stream` from
+    An example showing how to feed :class:`~termscraper.streams.Stream` from
     a running terminal app.
 
     :copyright: (c) 2015 by pyte authors and contributors,
                 see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
+                    see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
 
@@ -16,15 +18,15 @@ import select
 import signal
 import sys
 
-import pyte
+import termscraper
 
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         sys.exit("usage: %prog% command [args]")
 
-    screen = pyte.Screen(80, 24)
-    stream = pyte.ByteStream(screen)
+    screen = termscraper.Screen(80, 24)
+    stream = termscraper.ByteStream(screen)
 
     p_pid, master_fd = pty.fork()
     if p_pid == 0:  # Child.

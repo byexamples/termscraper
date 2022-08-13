@@ -1,9 +1,9 @@
 """
-    pyte.modes
+    termscraper.modes
     ~~~~~~~~~~
 
     This module defines terminal mode switches, used by
-    :class:`~pyte.screens.Screen`. There're two types of terminal modes:
+    :class:`~termscraper.screens.Screen`. There're two types of terminal modes:
 
     * `non-private` which should be set with ``ESC [ N h``, where ``N``
       is an integer, representing mode being set; and
@@ -19,12 +19,14 @@
     :copyright: (c) 2011-2012 by Selectel.
     :copyright: (c) 2012-2017 by pyte authors and contributors,
                     see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
+                    see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
 
 #: *Line Feed/New Line Mode*: When enabled, causes a received
-#: :data:`~pyte.control.LF`, :data:`pyte.control.FF`, or
-#: :data:`~pyte.control.VT` to move the cursor to the first column of
+#: :data:`~termscraper.control.LF`, :data:`termscraper.control.FF`, or
+#: :data:`~termscraper.control.VT` to move the cursor to the first column of
 #: the next line.
 LNM = 20
 
@@ -33,7 +35,6 @@ LNM = 20
 #: right margin are lost. Otherwise, new display characters replace
 #: old display characters at the cursor position.
 IRM = 4
-
 
 # Private modes.
 # ..............

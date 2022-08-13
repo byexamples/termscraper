@@ -2,11 +2,11 @@
     webterm
     ~~~~~~~
 
-    An example showing how to use :mod:`pyte` to implement a basic
+    An example showing how to use :mod:`termscraper` to implement a basic
     single-user web terminal.
 
     Client-side ``webterm.js`` supports
-    * incremental rendering via :data:`~pyte.screens.DiffScreen.dirty`,
+    * incremental rendering via :data:`~termscraper.screens.DiffScreen.dirty`,
     * most of the common keyboard events,
     * pagination on Meta + P/Meta + A.
 
@@ -20,6 +20,8 @@
 
     :copyright: (c) 2017 by pyte authors and contributors,
                 see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
+                    see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
 
@@ -35,16 +37,16 @@ import aiohttp
 import asyncio
 from aiohttp import web
 
-import pyte
+import termscraper
 
 
 class Terminal:
     def __init__(self, columns, lines, p_in):
-        self.screen = pyte.HistoryScreen(columns, lines)
-        self.screen.set_mode(pyte.modes.LNM)
+        self.screen = termscraper.HistoryScreen(columns, lines)
+        self.screen.set_mode(termscraper.modes.LNM)
         self.screen.write_process_input = \
             lambda data: p_in.write(data.encode())
-        self.stream = pyte.ByteStream()
+        self.stream = termscraper.ByteStream()
         self.stream.attach(self.screen)
 
     def feed(self, data):
@@ -94,10 +96,10 @@ async def websocket_handler(request):
     try:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
-                if msg.data == pyte.control.ESC + "N":
+                if msg.data == termscraper.control.ESC + "N":
                     terminal.screen.next_page()
                     ws.send_str(terminal.dumps())
-                elif msg.data == pyte.control.ESC + "P":
+                elif msg.data == termscraper.control.ESC + "P":
                     terminal.screen.prev_page()
                     ws.send_str(terminal.dumps())
                 else:

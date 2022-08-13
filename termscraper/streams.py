@@ -1,20 +1,22 @@
 """
-    pyte.streams
+    termscraper.streams
     ~~~~~~~~~~~~
 
     This module provides three stream implementations with different
     features; for starters, here's a quick example of how streams are
     typically used:
 
-    >>> import pyte
-    >>> screen = pyte.Screen(80, 24)
-    >>> stream = pyte.Stream(screen)
+    >>> import termscraper
+    >>> screen = termscraper.Screen(80, 24)
+    >>> stream = termscraper.Stream(screen)
     >>> stream.feed("\x1b[5B")  # Move the cursor down 5 rows.
     >>> screen.cursor.y
     5
 
     :copyright: (c) 2011-2012 by Selectel.
     :copyright: (c) 2012-2017 by pyte authors and contributors,
+                    see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
                     see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
@@ -32,7 +34,7 @@ class Stream:
     """A stream is a state machine that parses a stream of bytes and
     dispatches events based on what it sees.
 
-    :param pyte.screens.Screen screen: a screen to dispatch events to.
+    :param termscraper.screens.Screen screen: a screen to dispatch events to.
     :param bool strict: check if a given screen implements all required
                         events.
 
@@ -40,7 +42,7 @@ class Stream:
 
        Stream only accepts text as input, but if for some reason
        you need to feed it with bytes, consider using
-       :class:`~pyte.streams.ByteStream` instead.
+       :class:`~termscraper.streams.ByteStream` instead.
 
     .. versionchanged 0.6.0::
 
@@ -117,18 +119,23 @@ class Stream:
     }
 
     #: A set of all events dispatched by the stream.
-    events = frozenset(itertools.chain(
-        basic.values(), escape.values(), sharp.values(), csi.values(),
-        ["define_charset"],
-        ["set_icon_name", "set_title"],  # OSC.
-        ["draw", "debug"]))
+    events = frozenset(
+        itertools.chain(
+            basic.values(),
+            escape.values(),
+            sharp.values(),
+            csi.values(),
+            ["define_charset"],
+            ["set_icon_name", "set_title"],  # OSC.
+            ["draw", "debug"]
+        )
+    )
 
     #: A regular expression pattern matching everything what can be
     #: considered plain text.
     _special = set([ctrl.ESC, ctrl.CSI_C1, ctrl.NUL, ctrl.DEL, ctrl.OSC_C1])
     _special.update(basic)
-    _text_pattern = re.compile(
-        "[^" + "".join(map(re.escape, _special)) + "]+")
+    _text_pattern = re.compile("[^" + "".join(map(re.escape, _special)) + "]+")
     del _special
 
     def __init__(self, screen=None, strict=True):
@@ -142,13 +149,15 @@ class Stream:
     def attach(self, screen):
         """Adds a given screen to the listener queue.
 
-        :param pyte.screens.Screen screen: a screen to attach to.
+        :param termscraper.screens.Screen screen: a screen to attach to.
         """
         if self.listener is not None:
-            warnings.warn("As of version 0.6.0 the listener queue is "
-                          "restricted to a single element. Existing "
-                          "listener {0} will be replaced."
-                          .format(self.listener), DeprecationWarning)
+            warnings.warn(
+                "As of version 0.6.0 the listener queue is "
+                "restricted to a single element. Existing "
+                "listener {0} will be replaced.".format(self.listener),
+                DeprecationWarning
+            )
 
         if self.strict:
             for event in self.events:
@@ -163,7 +172,7 @@ class Stream:
         """Remove a given screen from the listener queue and fails
         silently if it's not attached.
 
-        :param pyte.screens.Screen screen: a screen to detach.
+        :param termscraper.screens.Screen screen: a screen to detach.
         """
         if screen is self.listener:
             self.listener = None
@@ -227,14 +236,19 @@ class Stream:
         SP_OR_GT = ctrl.SP + ">"
         NUL_OR_DEL = ctrl.NUL + ctrl.DEL
         CAN_OR_SUB = ctrl.CAN + ctrl.SUB
-        ALLOWED_IN_CSI = "".join([ctrl.BEL, ctrl.BS, ctrl.HT, ctrl.LF,
-                                  ctrl.VT, ctrl.FF, ctrl.CR])
+        ALLOWED_IN_CSI = "".join(
+            [ctrl.BEL, ctrl.BS, ctrl.HT, ctrl.LF, ctrl.VT, ctrl.FF, ctrl.CR]
+        )
         OSC_TERMINATORS = set([ctrl.ST_C0, ctrl.ST_C1, ctrl.BEL])
 
         def create_dispatcher(mapping):
-            return defaultdict(lambda: debug, dict(
-                (event, getattr(listener, attr))
-                for event, attr in mapping.items()))
+            return defaultdict(
+                lambda: debug,
+                dict(
+                    (event, getattr(listener, attr))
+                    for event, attr in mapping.items()
+                )
+            )
 
         basic_dispatch = create_dispatcher(basic)
         sharp_dispatch = create_dispatcher(self.sharp)
@@ -279,7 +293,7 @@ class Stream:
                         listener.define_charset(code, mode=char)
                     else:
                         escape_dispatch[char]()
-                    continue    # Don't go to CSI.
+                    continue  # Don't go to CSI.
 
             if char in basic:
                 # Ignore shifts in UTF-8 mode. See
@@ -388,11 +402,11 @@ class ByteStream(Stream):
     """A stream which takes bytes as input.
 
     Bytes are decoded to text using either UTF-8 (default) or the encoding
-    selected via :meth:`~pyte.Stream.select_other_charset`.
+    selected via :meth:`~termscraper.Stream.select_other_charset`.
 
     .. attribute:: use_utf8
 
-       Assume the input to :meth:`~pyte.streams.ByteStream.feed` is encoded
+       Assume the input to :meth:`~termscraper.streams.ByteStream.feed` is encoded
        using UTF-8. Defaults to ``True``.
     """
     def __init__(self, *args, **kwargs):

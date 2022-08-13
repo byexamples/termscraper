@@ -1,12 +1,14 @@
 """
-    pyte.escape
+    termscraper.escape
     ~~~~~~~~~~~
 
     This module defines both CSI and non-CSI escape sequences, recognized
-    by :class:`~pyte.streams.Stream` and subclasses.
+    by :class:`~termscraper.streams.Stream` and subclasses.
 
     :copyright: (c) 2011-2012 by Selectel.
     :copyright: (c) 2012-2017 by pyte authors and contributors,
+                    see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
                     see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
@@ -18,7 +20,7 @@ RIS = "c"
 #: at the bottom margin, the screen performs a scroll-up.
 IND = "D"
 
-#: *Next line*: Same as :data:`pyte.control.LF`.
+#: *Next line*: Same as :data:`termscraper.control.LF`.
 NEL = "E"
 
 #: Tabulation set: Set a horizontal tab stop at cursor position.
@@ -44,7 +46,6 @@ DECRC = "8"
 #: *Alignment display*: Fill screen with uppercase E's for testing
 #: screen focus and alignment.
 DECALN = "8"
-
 
 # ECMA-48 CSI sequences.
 # ---------------------
@@ -137,7 +138,7 @@ RM = "l"
 
 #: *Select graphics rendition*: The terminal can display the following
 #: character attributes that change the character display without
-#: changing the character (see :mod:`pyte.graphics`).
+#: changing the character (see :mod:`termscraper.graphics`).
 SGR = "m"
 
 #: *Device status report*.
