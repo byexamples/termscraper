@@ -1,9 +1,9 @@
 """
-    pyte.control
+    termscraper.control
     ~~~~~~~~~~~~
 
     This module defines simple control sequences, recognized by
-    :class:`~pyte.streams.Stream`, the set of codes here is for
+    :class:`~termscraper.streams.Stream`, the set of codes here is for
     ``TERM=linux`` which is a superset of VT102.
 
     :copyright: (c) 2011-2012 by Selectel.
@@ -31,7 +31,7 @@ BS = "\x08"
 #: of the line if there is no earlier tab stop.
 HT = "\x09"
 
-#: *Linefeed*: Give a line feed, and, if :data:`pyte.modes.LNM` (new
+#: *Linefeed*: Give a line feed, and, if :data:`termscraper.modes.LNM` (new
 #: line mode) is set also a carriage return.
 LF = "\n"
 #: *Vertical tab*: Same as :data:`LF`.

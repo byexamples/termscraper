@@ -5,6 +5,8 @@
     A tiny example to show how pagination works.
 
     :copyright: (c) 2011-2013 by Selectel, see AUTHORS for details.
+    :copyright: (c) 2022-... by termscraper authors and contributors,
+                    see AUTHORS for details.
     :license: LGPL, see LICENSE for more details.
 """
 
@@ -13,12 +15,12 @@ import random
 import string
 import sys
 
-import pyte
-from pyte import modes as mo
+import termscraper
+from termscraper import modes as mo
 
 
 def print_screen(screen, text):
-    print(pyte.control.ESC + pyte.escape.RIS)
+    print(termscraper.control.ESC + termscraper.escape.RIS)
 
     for idx, line in enumerate(screen.display, 1):
         print("{0:2d} {1} ¶".format(idx, line))
@@ -32,9 +34,9 @@ def random_string(n, alphabet=string.ascii_letters + " "):
 
 if __name__ == "__main__":
     # ``ratio=1`` means scroll the whole screen.
-    screen = pyte.HistoryScreen(80, 12, ratio=1)
+    screen = termscraper.HistoryScreen(80, 12, ratio=1)
     screen.set_mode(mo.LNM)
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
 
     pages = 3
     stream.feed(os.linesep.join(random_string(screen.columns)

@@ -3,7 +3,7 @@ import os.path, sys
 
 import pytest
 
-import pyte
+import termscraper
 
 
 captured_dir = os.path.join(os.path.dirname(__file__), "captured")
@@ -21,8 +21,8 @@ def test_input_output(name):
     with open(os.path.join(captured_dir, name + ".output")) as handle:
         output = json.load(handle)
 
-    screen = pyte.Screen(80, 24)
-    stream = pyte.ByteStream(screen)
+    screen = termscraper.Screen(80, 24)
+    stream = termscraper.ByteStream(screen)
     stream.feed(input)
     assert screen.display == output
     consistency_asserts(screen)
@@ -37,8 +37,8 @@ def test_input_output_history(name):
     with open(os.path.join(captured_dir, name + ".output")) as handle:
         output = json.load(handle)
 
-    screen = pyte.HistoryScreen(80, 24, history=72)
-    stream = pyte.ByteStream(screen)
+    screen = termscraper.HistoryScreen(80, 24, history=72)
+    stream = termscraper.ByteStream(screen)
     stream.feed(input)
     screen.prev_page()
     screen.prev_page()

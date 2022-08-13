@@ -1,17 +1,17 @@
 """
-    pyte
+    termscraper
     ~~~~
 
     Command-line tool for "disassembling" escape and CSI sequences::
 
-        $ echo -e "\\e[Jfoo" | python -m pyte
+        $ echo -e "\\e[Jfoo" | python -m termscraper
         ERASE_IN_DISPLAY 0
         DRAW f
         DRAW o
         DRAW o
         LINEFEED
 
-        $ python -m pyte foo
+        $ python -m termscraper foo
         DRAW f
         DRAW o
         DRAW o
@@ -26,9 +26,9 @@
 
 if __name__ == "__main__":
     import sys
-    import pyte
+    import termscraper
 
     if len(sys.argv) == 1:
-        pyte.dis(sys.stdin.read())
+        termscraper.dis(sys.stdin.read())
     else:
-        pyte.dis("".join(sys.argv[1:]))
+        termscraper.dis("".join(sys.argv[1:]))

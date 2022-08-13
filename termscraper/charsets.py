@@ -1,5 +1,5 @@
 """
-    pyte.charsets
+    termscraper.charsets
     ~~~~~~~~~~~~~
 
     This module defines ``G0`` and ``G1`` charset mappings the same way

@@ -1,14 +1,14 @@
 """
-    pyte.streams
+    termscraper.streams
     ~~~~~~~~~~~~
 
     This module provides three stream implementations with different
     features; for starters, here's a quick example of how streams are
     typically used:
 
-    >>> import pyte
-    >>> screen = pyte.Screen(80, 24)
-    >>> stream = pyte.Stream(screen)
+    >>> import termscraper
+    >>> screen = termscraper.Screen(80, 24)
+    >>> stream = termscraper.Stream(screen)
     >>> stream.feed("\x1b[5B")  # Move the cursor down 5 rows.
     >>> screen.cursor.y
     5
@@ -34,7 +34,7 @@ class Stream:
     """A stream is a state machine that parses a stream of bytes and
     dispatches events based on what it sees.
 
-    :param pyte.screens.Screen screen: a screen to dispatch events to.
+    :param termscraper.screens.Screen screen: a screen to dispatch events to.
     :param bool strict: check if a given screen implements all required
                         events.
 
@@ -42,7 +42,7 @@ class Stream:
 
        Stream only accepts text as input, but if for some reason
        you need to feed it with bytes, consider using
-       :class:`~pyte.streams.ByteStream` instead.
+       :class:`~termscraper.streams.ByteStream` instead.
 
     .. versionchanged 0.6.0::
 
@@ -144,7 +144,7 @@ class Stream:
     def attach(self, screen):
         """Adds a given screen to the listener queue.
 
-        :param pyte.screens.Screen screen: a screen to attach to.
+        :param termscraper.screens.Screen screen: a screen to attach to.
         """
         if self.listener is not None:
             warnings.warn("As of version 0.6.0 the listener queue is "
@@ -165,7 +165,7 @@ class Stream:
         """Remove a given screen from the listener queue and fails
         silently if it's not attached.
 
-        :param pyte.screens.Screen screen: a screen to detach.
+        :param termscraper.screens.Screen screen: a screen to detach.
         """
         if screen is self.listener:
             self.listener = None
@@ -390,11 +390,11 @@ class ByteStream(Stream):
     """A stream which takes bytes as input.
 
     Bytes are decoded to text using either UTF-8 (default) or the encoding
-    selected via :meth:`~pyte.Stream.select_other_charset`.
+    selected via :meth:`~termscraper.Stream.select_other_charset`.
 
     .. attribute:: use_utf8
 
-       Assume the input to :meth:`~pyte.streams.ByteStream.feed` is encoded
+       Assume the input to :meth:`~termscraper.streams.ByteStream.feed` is encoded
        using UTF-8. Defaults to ``True``.
     """
     def __init__(self, *args, **kwargs):

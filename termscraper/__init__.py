@@ -1,13 +1,13 @@
 """
-    pyte
+    termscraper
     ~~~~
 
-    `pyte` implements a mix of VT100, VT220 and VT520 specification,
+    `termscraper` implements a mix of VT100, VT220 and VT520 specification,
     and aims to support most of the `TERM=linux` functionality.
 
-    Two classes: :class:`~pyte.streams.Stream`, which parses the
+    Two classes: :class:`~termscraper.streams.Stream`, which parses the
     command stream and dispatches events for commands, and
-    :class:`~pyte.screens.Screen` which, when used with a stream
+    :class:`~termscraper.screens.Screen` which, when used with a stream
     maintains a buffer of strings representing the screen of a
     terminal.
 

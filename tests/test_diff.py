@@ -1,5 +1,5 @@
-import pyte
-from pyte import modes as mo
+import termscraper
+from termscraper import modes as mo
 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
@@ -10,7 +10,7 @@ def test_mark_whole_screen():
     # .. this is straightforward -- make sure we have a dirty attribute
     # and whole screen is marked as dirty on initialization, reset,
     # resize etc.
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
 
     # a) init.
     assert hasattr(screen, "dirty")
@@ -34,7 +34,7 @@ def test_mark_whole_screen():
 
 
 def test_mark_single_line():
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
 
     # a) draw().
     screen.dirty.clear()
@@ -54,7 +54,7 @@ def test_mark_single_line():
 
 def test_modes():
     # Making sure `DECSCNM` triggers a screen to be fully re-drawn.
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
 
     screen.dirty.clear()
     screen.set_mode(mo.DECSCNM >> 5, private=True)
@@ -66,7 +66,7 @@ def test_modes():
 
 
 def test_index():
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
     screen.dirty.clear()
 
     # a) not at the bottom margin -- nothing is marked dirty.
@@ -81,7 +81,7 @@ def test_index():
 
 
 def test_reverse_index():
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
     screen.dirty.clear()
 
     # a) not at the top margin -- whole screen is dirty.
@@ -98,7 +98,7 @@ def test_reverse_index():
 
 
 def test_insert_delete_lines():
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
     screen.cursor_to_line(screen.lines // 2)
 
     for method in ["insert_lines", "delete_lines"]:
@@ -109,7 +109,7 @@ def test_insert_delete_lines():
 
 
 def test_erase_in_display():
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
     screen.cursor_to_line(screen.lines // 2)
 
     # a) from cursor to the end of the screen.
@@ -137,7 +137,7 @@ def test_erase_in_display():
 
 
 def test_draw_wrap():
-    screen = pyte.DiffScreen(80, 24)
+    screen = termscraper.DiffScreen(80, 24)
     screen.set_mode(mo.DECAWM)
 
     # fill every character cell on the first row
@@ -157,7 +157,7 @@ def test_draw_wrap():
 
 
 def test_draw_multiple_chars_wrap():
-    screen = pyte.Screen(5, 2)
+    screen = termscraper.Screen(5, 2)
     screen.dirty.clear()
     screen.draw("1234567890")
     assert screen.cursor.y == 1

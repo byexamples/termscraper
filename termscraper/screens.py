@@ -1,18 +1,18 @@
 """
-    pyte.screens
+    termscraper.screens
     ~~~~~~~~~~~~
 
     This module provides classes for terminal screens, currently
     it contains three screens with different features:
 
-    * :class:`~pyte.screens.Screen` -- base screen implementation,
+    * :class:`~termscraper.screens.Screen` -- base screen implementation,
       which handles all the core escape sequences, recognized by
-      :class:`~pyte.streams.Stream`.
+      :class:`~termscraper.streams.Stream`.
     * If you need a screen to keep track of the changed lines
       (which you probably do need) -- use
-      :class:`~pyte.screens.DiffScreen`.
+      :class:`~termscraper.screens.DiffScreen`.
     * If you also want a screen to collect history and allow
-      pagination -- :class:`pyte.screen.HistoryScreen` is here
+      pagination -- :class:`termscraper.screen.HistoryScreen` is here
       for ya ;)
 
     .. note:: It would be nice to split those features into mixin
@@ -54,7 +54,7 @@ wcwidth = lru_cache(maxsize=4096)(wcwidth)
 #: A container for screen's scroll margins.
 Margins = namedtuple("Margins", "top bottom")
 
-#: A container for savepoint, created on :data:`~pyte.escape.DECSC`.
+#: A container for savepoint, created on :data:`~termscraper.escape.DECSC`.
 Savepoint = namedtuple("Savepoint", [
     "cursor",
     "g0_charset",
@@ -85,9 +85,9 @@ class LineStats(namedtuple("_LineStats", [
     "span",
     ])):
     """
-    :class:`~pyte.screens.LineStats` contains some useful statistics
+    :class:`~termscraper.screens.LineStats` contains some useful statistics
     about a single line in the screen to understand how the terminal program
-    draw on it and how :class:`~pyte.screens.Screen` makes use of the line.
+    draw on it and how :class:`~termscraper.screens.Screen` makes use of the line.
 
     The basic statistic is the character count over the total count
     of columns of the screen. The line is implemented as a sparse
@@ -122,7 +122,7 @@ class LineStats(namedtuple("_LineStats", [
     .. note::
 
     This is not part of the stable API so it may change
-    between version of pyte.
+    between version of termscraper.
     """
 
     def __repr__(self):
@@ -150,7 +150,7 @@ class BufferStats(namedtuple("_BufferStats", [
     "line_stats",
     ])):
     """
-    :class:`~pyte.screens.BufferStats` has some statistics about
+    :class:`~termscraper.screens.BufferStats` has some statistics about
     the buffer of the screen, a 2d sparse matrix representation of the screen.
 
     The sparse implementation means that empty lines are not stored
@@ -181,15 +181,15 @@ class BufferStats(namedtuple("_BufferStats", [
     are part of the stats. From there, the range and the span (length)
     are calculated as well the entries/span ratio to see how densely
     packed are the lines.
-    See :class:`~pyte.screens.LineStats` for more about these stats.
+    See :class:`~termscraper.screens.LineStats` for more about these stats.
 
     After the buffer's stats, the stats of each non-empty line in the buffer
-    follows. See :class:`~pyte.screens.LineStats` for that.
+    follows. See :class:`~termscraper.screens.LineStats` for that.
 
     .. note::
 
     This is not part of the stable API so it may change
-    between version of pyte.
+    between version of termscraper.
     """
 
     def __repr__(self):
@@ -227,10 +227,10 @@ class Char:
     :param bool width: the width in terms of cells to display this char.
     :param CharStyle style: the style of the character.
 
-    The :meth:`~pyte.screens.Char.from_attributes` allows to create
-    a new :class:`~pyte.screens.Char` object
+    The :meth:`~termscraper.screens.Char.from_attributes` allows to create
+    a new :class:`~termscraper.screens.Char` object
     setting each attribute, one by one, without requiring and explicit
-    :class:`~pyte.screens.CharStyle` object.
+    :class:`~termscraper.screens.CharStyle` object.
 
     The supported attributes are:
 
@@ -249,10 +249,10 @@ class Char:
     :param bool blink: flag for rendering the character blinked. Defaults to
                        ``False``.
 
-    The attributes data, width and style of :class:`~pyte.screens.Char`
+    The attributes data, width and style of :class:`~termscraper.screens.Char`
     must be considered read-only. Any modification is undefined.
-    If you want to modify a :class:`~pyte.screens.Char`, use the public
-    interface of :class:`~pyte.screens.Screen`.
+    If you want to modify a :class:`~termscraper.screens.Char`, use the public
+    interface of :class:`~termscraper.screens.Screen`.
     """
     __slots__ = (
         "data",
@@ -355,8 +355,8 @@ class Cursor:
 
     :param int x: 0-based horizontal cursor position.
     :param int y: 0-based vertical cursor position.
-    :param pyte.screens.Char attrs: cursor attributes (see
-        :meth:`~pyte.screens.Screen.select_graphic_rendition`
+    :param termscraper.screens.Char attrs: cursor attributes (see
+        :meth:`~termscraper.screens.Screen.select_graphic_rendition`
         for details).
     """
     __slots__ = ("x", "y", "attrs", "hidden")
@@ -374,8 +374,8 @@ class Line(dict):
     This dict subclass implements a sparse array for 0-based
     indexed characters that represents a single line or row of the screen.
 
-    :param pyte.screens.Char default: a :class:`~pyte.screens.Char` instance
-        to be used as default. See :meth:`~pyte.screens.Line.char_at`
+    :param termscraper.screens.Char default: a :class:`~termscraper.screens.Char` instance
+        to be used as default. See :meth:`~termscraper.screens.Line.char_at`
         for details.
     """
     __slots__ = ('default', )
@@ -412,13 +412,13 @@ class Line(dict):
 
     def stats(self, screen):
         """
-        Return a :class:`~pyte.screens.LineStats` object with the statistics
+        Return a :class:`~termscraper.screens.LineStats` object with the statistics
         of the line.
 
         .. note::
 
         This is not part of the stable API so it may change
-        between version of pyte.
+        between version of termscraper.
         """
         return LineStats(
                 empty=not bool(self),
@@ -436,11 +436,11 @@ class Buffer(dict):
     This dict subclass implements a sparse array for 0-based
     indexed lines that represents the screen. Each line is then
     a sparse array for the characters in the same row (see
-    :class:`~pyte.screens.Line`).
+    :class:`~termscraper.screens.Line`).
 
-    :param pyte.screens.Screen screen: a :class:`~pyte.screens.Screen` instance
+    :param termscraper.screens.Screen screen: a :class:`~termscraper.screens.Screen` instance
         to be used when a default line needs to be created.
-        See :meth:`~pyte.screens.Buffer.line_at` for details.
+        See :meth:`~termscraper.screens.Buffer.line_at` for details.
     """
     __slots__ = ('_screen', )
     def __init__(self, screen):
@@ -464,13 +464,13 @@ class LineView:
     """
     A read-only view of an horizontal line of the screen.
 
-    :param pyte.screens.Line line: a :class:`~pyte.screens.Line` instance
+    :param termscraper.screens.Line line: a :class:`~termscraper.screens.Line` instance
 
     Modifications to the internals of the screen is still possible through
-    this :class:`~pyte.screens.LineView` however any modification
+    this :class:`~termscraper.screens.LineView` however any modification
     will result in an undefined behaviour. Don't do that.
 
-    See :class:`~pyte.screens.BufferView`.
+    See :class:`~termscraper.screens.BufferView`.
     """
     __slots__ = ("_line",)
     def __init__(self, line):
@@ -499,14 +499,14 @@ class BufferView:
     """
     A read-only view of the screen.
 
-    :param pyte.screens.Screen screen: a :class:`~pyte.screens.Screen` instance
+    :param termscraper.screens.Screen screen: a :class:`~termscraper.screens.Screen` instance
 
     Modifications to the internals of the screen is still possible through
-    this :class:`~pyte.screens.BufferView` however any modification
+    this :class:`~termscraper.screens.BufferView` however any modification
     will result in an undefined behaviour. Don't do that.
 
     Any modification to the screen must be done through its methods
-    (principally :meth:`~pyte.screens.Screen.draw`).
+    (principally :meth:`~termscraper.screens.Screen.draw`).
 
     This view allows the user to iterate over the lines and chars of
     the buffer to query their attributes.
@@ -571,22 +571,22 @@ class Screen:
     Defaults to True.
 
     :param bool disable_display_graphic: disables the modification
-    of cursor attributes disabling :meth:`~pyte.screens.Screen.select_graphic_rendition`.
+    of cursor attributes disabling :meth:`~termscraper.screens.Screen.select_graphic_rendition`.
     Defaults to False.
 
     .. note::
 
     If you don't need the functionality, setting `track_dirty_lines`
     to False and `disable_display_graphic` to True can
-    make :class:`~pyte.screens.Screen` to work faster and consume less
+    make :class:`~termscraper.screens.Screen` to work faster and consume less
     resources.
 
     .. attribute:: buffer
 
-       A ``lines x columns`` :class:`~pyte.screens.Char` matrix view of
-       the screen. Under the hood :class:`~pyte.screens.Screen` implements
+       A ``lines x columns`` :class:`~termscraper.screens.Char` matrix view of
+       the screen. Under the hood :class:`~termscraper.screens.Screen` implements
        a sparse matrix but `screen.buffer` returns a dense view.
-       See :class:`~pyte.screens.BufferView`
+       See :class:`~termscraper.screens.BufferView`
 
     .. attribute:: dirty
 
@@ -606,7 +606,7 @@ class Screen:
 
     .. attribute:: cursor
 
-       Reference to the :class:`~pyte.screens.Cursor` object, holding
+       Reference to the :class:`~termscraper.screens.Cursor` object, holding
        cursor position and attributes.
 
     .. attribute:: margins
@@ -632,8 +632,8 @@ class Screen:
     .. versionchanged:: 0.4.7
     .. warning::
 
-       :data:`~pyte.modes.LNM` is reset by default, to match VT220
-       specification. Unfortunately this makes :mod:`pyte` fail
+       :data:`~termscraper.modes.LNM` is reset by default, to match VT220
+       specification. Unfortunately this makes :mod:`termscraper` fail
        ``vttest`` for cursor movement.
 
     .. versionchanged:: 0.4.8
@@ -690,7 +690,7 @@ class Screen:
         .. note::
 
         This is not part of the stable API so it may change
-        between version of pyte.
+        between version of termscraper.
         """
         buffer = self._buffer
         return BufferStats(
@@ -724,7 +724,7 @@ class Screen:
         fashion and it may not strip/filter fully the spaces and/or lines.
 
         This method is meant to be an optimization over
-        :meth:`~pyte.screens.Screen.display` for displaying
+        :meth:`~termscraper.screens.Screen.display` for displaying
         large mostly-empty screens.
 
         For left-written texts,
@@ -909,7 +909,7 @@ class Screen:
         """Set (enable) a given list of modes.
 
         :param list modes: modes to set, where each mode is a constant
-                           from :mod:`pyte.modes`.
+                           from :mod:`termscraper.modes`.
         """
         # Private mode codes are shifted, to be distinguished from non
         # private ones.
@@ -949,7 +949,7 @@ class Screen:
         """Reset (disable) a given list of modes.
 
         :param list modes: modes to reset -- hopefully, each mode is a
-                           constant from :mod:`pyte.modes`.
+                           constant from :mod:`termscraper.modes`.
         """
         # Private mode codes are shifted, to be distinguished from non
         # private ones.
@@ -1009,7 +1009,7 @@ class Screen:
 
     def draw(self, data):
         """Display decoded characters at the current cursor position and
-        advances the cursor if :data:`~pyte.modes.DECAWM` is set.
+        advances the cursor if :data:`~termscraper.modes.DECAWM` is set.
 
         :param str data: text to display.
 
@@ -1216,7 +1216,7 @@ class Screen:
             self.cursor_up()
 
     def linefeed(self):
-        """Perform an index and, if :data:`~pyte.modes.LNM` is set, a
+        """Perform an index and, if :data:`~termscraper.modes.LNM` is set, a
         carriage return.
         """
         self.index()
@@ -1611,7 +1611,7 @@ class Screen:
         """Ensure the cursor is within vertical screen bounds.
 
         :param bool use_margins: when ``True`` or when
-                                 :data:`~pyte.modes.DECOM` is set,
+                                 :data:`~termscraper.modes.DECOM` is set,
                                  cursor is bounded by top and and bottom
                                  margins, instead of ``[0; lines - 1]``.
         """
@@ -1685,7 +1685,7 @@ class Screen:
         """Set the cursor to a specific `line` and `column`.
 
         Cursor is allowed to move out of the scrolling region only when
-        :data:`~pyte.modes.DECOM` is reset, otherwise -- the position
+        :data:`~termscraper.modes.DECOM` is reset, otherwise -- the position
         doesn't change.
 
         :param int line: line number to move the cursor to.
@@ -1862,7 +1862,7 @@ class DiffScreen(Screen):
     .. deprecated:: 0.7.0
 
        The functionality contained in this class has been merged into
-       :class:`~pyte.screens.Screen` and will be removed in 0.8.0.
+       :class:`~termscraper.screens.Screen` and will be removed in 0.8.0.
        Please update your code accordingly.
     """
     def __init__(self, *args, **kwargs):
@@ -1878,7 +1878,7 @@ History = namedtuple("History", "top bottom ratio size position")
 
 
 class HistoryScreen(Screen):
-    """A :class:`~pyte.screens.Screen` subclass, which keeps track
+    """A :class:`~termscraper.screens.Screen` subclass, which keeps track
     of screen history and allows pagination. This is not linux-specific,
     but still useful; see page 462 of VT520 User's Manual.
 
@@ -1909,7 +1909,7 @@ class HistoryScreen(Screen):
 
     .. note::
 
-       Don't forget to update :class:`~pyte.streams.Stream` class with
+       Don't forget to update :class:`~termscraper.streams.Stream` class with
        appropriate escape sequences -- you can use any, since pagination
        protocol is not standardized, for example::
 
@@ -2149,7 +2149,7 @@ class HistoryScreen(Screen):
 
 
 class DebugEvent(namedtuple("Event", "name args kwargs")):
-    """Event dispatched to :class:`~pyte.screens.DebugScreen`.
+    """Event dispatched to :class:`~termscraper.screens.DebugScreen`.
 
     .. warning::
 

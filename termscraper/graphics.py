@@ -1,5 +1,5 @@
 """
-    pyte.graphics
+    termscraper.graphics
     ~~~~~~~~~~~~~
 
     This module defines graphic-related constants, mostly taken from
@@ -54,7 +54,7 @@ FG_ANSI = {
     39: "default"  # white.
 }
 
-#: An alias to :data:`~pyte.graphics.FG_ANSI` for compatibility.
+#: An alias to :data:`~termscraper.graphics.FG_ANSI` for compatibility.
 FG = FG_ANSI
 
 #: A mapping of non-standard ``aixterm`` foreground color codes to
@@ -88,7 +88,7 @@ BG_ANSI = {
     49: "default"  # black.
 }
 
-#: An alias to :data:`~pyte.graphics.BG_ANSI` for compatibility.
+#: An alias to :data:`~termscraper.graphics.BG_ANSI` for compatibility.
 BG = BG_ANSI
 
 #: A mapping of non-standard ``aixterm`` background color codes to

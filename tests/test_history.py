@@ -1,7 +1,7 @@
 import os, sys
 
-import pyte
-from pyte import control as ctrl, modes as mo
+import termscraper
+from termscraper import control as ctrl, modes as mo
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "helpers"))
 from asserts import consistency_asserts
@@ -12,7 +12,7 @@ def chars(history_lines, columns):
 
 
 def test_index():
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
 
     # Filling the screen with line numbers, so it's easier to
     # track history contents.
@@ -44,7 +44,7 @@ def test_index():
 
 
 def test_reverse_index():
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
 
     # Filling the screen with line numbers, so it's easier to
     # track history contents.
@@ -78,7 +78,7 @@ def test_reverse_index():
 
 
 def test_prev_page():
-    screen = pyte.HistoryScreen(4, 4, history=40)
+    screen = termscraper.HistoryScreen(4, 4, history=40)
     screen.set_mode(mo.LNM)
 
     assert screen.history.position == 40
@@ -153,7 +153,7 @@ def test_prev_page():
     ]
 
     # c) same with odd number of lines.
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
     screen.set_mode(mo.LNM)
 
     for idx in range(screen.lines * 10):
@@ -191,7 +191,7 @@ def test_prev_page():
     ]
 
     # d) with a ratio other than 0.5
-    screen = pyte.HistoryScreen(4, 4, history=40, ratio=0.75)
+    screen = termscraper.HistoryScreen(4, 4, history=40, ratio=0.75)
     screen.set_mode(mo.LNM)
 
     for idx in range(screen.lines * 10):
@@ -227,7 +227,7 @@ def test_prev_page():
     ]
 
     # e) same with cursor in the middle of the screen.
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
     screen.set_mode(mo.LNM)
 
     for idx in range(screen.lines * 10):
@@ -276,7 +276,7 @@ def test_prev_page():
     consistency_asserts(screen)
 
     # e) same with cursor near the middle of the screen.
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
     screen.set_mode(mo.LNM)
 
     for idx in range(screen.lines * 10):
@@ -334,7 +334,7 @@ def test_prev_page_large_sparse():
     # Because screen.buffer is optimized to not have entries
     # for empty lines, this setup may uncover bugs that
     # test_prev_page cannot
-    screen = pyte.HistoryScreen(4, 8, history=16)
+    screen = termscraper.HistoryScreen(4, 8, history=16)
     screen.set_mode(mo.LNM)
 
     assert screen.history.position == 16
@@ -452,7 +452,7 @@ def test_prev_page_large_sparse():
 
 
 def test_next_page():
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
     screen.set_mode(mo.LNM)
 
     # Once again filling the screen with line numbers, but this time,
@@ -526,7 +526,7 @@ def test_next_page():
     consistency_asserts(screen)
 
 def test_next_page_large_sparse():
-    screen = pyte.HistoryScreen(5, 8, history=16)
+    screen = termscraper.HistoryScreen(5, 8, history=16)
     screen.set_mode(mo.LNM)
 
     assert screen.history.position == 16
@@ -631,13 +631,13 @@ def test_next_page_large_sparse():
 
 
 def test_ensure_width(monkeypatch):
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
     screen.set_mode(mo.LNM)
-    escape = dict(pyte.Stream.escape)
+    escape = dict(termscraper.Stream.escape)
     escape.update({"N": "next_page", "P": "prev_page"})
-    monkeypatch.setattr(pyte.Stream, "escape", escape)
+    monkeypatch.setattr(termscraper.Stream, "escape", escape)
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
 
     for idx in range(screen.lines * 5):
         stream.feed("{0:04d}".format(idx) + os.linesep)
@@ -668,7 +668,7 @@ def test_ensure_width(monkeypatch):
 
 
 def test_not_enough_lines():
-    screen = pyte.HistoryScreen(5, 5, history=6)
+    screen = termscraper.HistoryScreen(5, 5, history=6)
     screen.set_mode(mo.LNM)
 
     for idx in range(screen.lines):
@@ -714,13 +714,13 @@ def test_not_enough_lines():
 
 
 def test_draw(monkeypatch):
-    screen = pyte.HistoryScreen(5, 5, history=50)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
     screen.set_mode(mo.LNM)
-    escape = dict(pyte.Stream.escape)
+    escape = dict(termscraper.Stream.escape)
     escape.update({"N": "next_page", "P": "prev_page"})
-    monkeypatch.setattr(pyte.Stream, "escape", escape)
+    monkeypatch.setattr(termscraper.Stream, "escape", escape)
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     for idx in range(screen.lines * 5):
         stream.feed(str(idx) + os.linesep)
 
@@ -751,12 +751,12 @@ def test_draw(monkeypatch):
 
 
 def test_cursor_is_hidden(monkeypatch):
-    screen = pyte.HistoryScreen(5, 5, history=50)
-    escape = dict(pyte.Stream.escape)
+    screen = termscraper.HistoryScreen(5, 5, history=50)
+    escape = dict(termscraper.Stream.escape)
     escape.update({"N": "next_page", "P": "prev_page"})
-    monkeypatch.setattr(pyte.Stream, "escape", escape)
+    monkeypatch.setattr(termscraper.Stream, "escape", escape)
 
-    stream = pyte.Stream(screen)
+    stream = termscraper.Stream(screen)
     for idx in range(screen.lines * 5):
         stream.feed(str(idx) + os.linesep)
 
@@ -773,7 +773,7 @@ def test_cursor_is_hidden(monkeypatch):
 
 
 def test_erase_in_display():
-    screen = pyte.HistoryScreen(5, 5, history=6)
+    screen = termscraper.HistoryScreen(5, 5, history=6)
     screen.set_mode(mo.LNM)
 
     for idx in range(screen.lines):
