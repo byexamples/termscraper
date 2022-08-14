@@ -332,6 +332,46 @@ def test_set_mode():
     screen.reset_mode(mo.DECTCEM)
     assert screen.cursor_hidden
 
+def test_set_mode_on_styleless_screen():
+    # Test mo.DECCOLM mode
+    # Styleless should *not* affect this
+    screen = update(termscraper.Screen(3, 3, styleless=True), ["sam", "is ", "foo"])
+    screen.cursor_position(1, 1)
+    screen.set_mode(mo.DECCOLM)
+    for line in range(3):
+        for char in tolist(screen)[line]:
+            assert char == screen.default_char
+    assert screen.columns == 132
+    assert screen.cursor_x == 0
+    assert screen.cursor_y == 0
+    screen.reset_mode(mo.DECCOLM)
+    assert screen.columns == 3
+    for line in range(3):
+        for char in tolist(screen)[line]:
+            assert char == screen.default_char
+
+    # Test mo.DECSCNM mode
+    # Styleless should prevent the reverse style
+    screen = update(termscraper.Screen(3, 3, styleless=True), ["sam", "is ", "foo"])
+    screen.set_mode(mo.DECSCNM)
+    for line in range(3):
+        for char in tolist(screen)[line]:
+            assert not char.reverse
+    assert not screen.default_char.reverse
+    screen.reset_mode(mo.DECSCNM)
+    for line in range(3):
+        for char in tolist(screen)[line]:
+            assert not char.reverse
+    assert not screen.default_char.reverse
+
+    # Test mo.DECTCEM mode
+    # Styleless should *not* affect this
+    screen = update(termscraper.Screen(3, 3, styleless=True), ["sam", "is ", "foo"])
+    screen.cursor_hidden = True
+    screen.set_mode(mo.DECTCEM)
+    assert not screen.cursor_hidden
+    screen.reset_mode(mo.DECTCEM)
+    assert screen.cursor_hidden
 
 def test_draw():
     # ``DECAWM`` on (default).

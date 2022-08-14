@@ -581,14 +581,16 @@ class Screen:
     (see `dirty` attribute). If it is false do not track any line.
     Defaults to True.
 
-    :param bool disable_display_graphic: disables the modification
-    of cursor attributes disabling :meth:`~termscraper.screens.Screen.select_graphic_rendition`.
+    :param bool styleless: disables the modification
+    of cursor attributes disabling :meth:`~termscraper.screens.Screen.select_graphic_rendition`
+    and ignoring the mo.DECSCNM mode making the Screen effectively
+    styleless.
     Defaults to False.
 
     .. note::
 
     If you don't need the functionality, setting `track_dirty_lines`
-    to False and `disable_display_graphic` to True can
+    to False and `styleless` to True can
     make :class:`~termscraper.screens.Screen` to work faster and consume less
     resources.
 
@@ -682,8 +684,11 @@ class Screen:
 
         screen.default_style is update with the style of the
         new screen.default_char
+
+        If screen.styleless is True, the default char will have a normal
+        default style regardless of the mode.
         """
-        ref = self._default_char_reversed if mo.DECSCNM in self.mode else self._default_char_normal
+        ref = self._default_char_normal if self.styleless or mo.DECSCNM not in self.mode else self._default_char_reversed
         self.default_char = ref
         self.default_style = ref.style
 
@@ -695,18 +700,14 @@ class Screen:
         return self.default_char.copy()
 
     def __init__(
-        self,
-        columns,
-        lines,
-        track_dirty_lines=True,
-        disable_display_graphic=False
+        self, columns, lines, track_dirty_lines=True, styleless=False
     ):
         self.savepoints = []
         self.columns = columns
         self.lines = lines
         self._buffer = Buffer(self)
         self.dirty = set() if track_dirty_lines else _NullSet()
-        self.disabled_display_graphic = disable_display_graphic
+        self.styleless = styleless
 
         style_normal = CharStyle(
             fg="default",
@@ -998,7 +999,7 @@ class Screen:
             self.cursor_position()
 
         # Mark all displayed characters as reverse.
-        if mo.DECSCNM in modes:
+        if not self.styleless and mo.DECSCNM in modes:
             for line in self._buffer.values():
                 line.default.style = line.default.style._replace(reverse=True)
                 for char in line.values():
@@ -1020,7 +1021,7 @@ class Screen:
         # private ones.
         if kwargs.get("private"):
             modes = [mode << 5 for mode in modes]
-            if mo.DECSCNM in modes:
+            if not self.styleless and mo.DECSCNM in modes:
                 self.dirty.update(range(self.lines))
 
         self.mode.difference_update(modes)
@@ -1037,7 +1038,7 @@ class Screen:
         if mo.DECOM in modes:
             self.cursor_position()
 
-        if mo.DECSCNM in modes:
+        if not self.styleless and mo.DECSCNM in modes:
             for line in self._buffer.values():
                 line.default.style = line.default.style._replace(reverse=False)
                 for char in line.values():
@@ -1825,7 +1826,7 @@ class Screen:
 
         .. note::
 
-        If `disable_display_graphic` was set, this method
+        If `styleless` was set, this method
         set the cursor's attributes to the default char's attributes
         ignoring all the parameters.
         Equivalent to `screen.select_graphic_rendition(0)`.
@@ -1833,7 +1834,7 @@ class Screen:
         replace = {}
 
         # Fast path for resetting all attributes.
-        if not attrs or attrs == (0, ) or self.disabled_display_graphic:
+        if not attrs or attrs == (0, ) or self.styleless:
             self.cursor_style = self.default_style
             return
         else:
@@ -1843,7 +1844,7 @@ class Screen:
             attr = attrs.pop()
             if attr == 0:
                 # Reset all attributes.
-                replace.update(self.default_char.style._asdict())
+                replace.update(self.default_style._asdict())
             elif attr in g.FG_ANSI:
                 replace["fg"] = g.FG_ANSI[attr]
             elif attr in g.BG:
@@ -1999,7 +2000,7 @@ class HistoryScreen(Screen):
         history=100,
         ratio=.5,
         track_dirty_lines=True,
-        disable_display_graphic=False
+        styleless=False
     ):
         self.history = History(
             deque(maxlen=history), deque(maxlen=history), float(ratio),
@@ -2010,7 +2011,7 @@ class HistoryScreen(Screen):
             columns,
             lines,
             track_dirty_lines=track_dirty_lines,
-            disable_display_graphic=disable_display_graphic
+            styleless=styleless
         )
 
     def _make_wrapper(self, event, handler):
