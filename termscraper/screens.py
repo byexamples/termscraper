@@ -52,7 +52,7 @@ Margins = namedtuple("Margins", "top bottom")
 #: A container for savepoint, created on :data:`~termscraper.escape.DECSC`.
 Savepoint = namedtuple(
     "Savepoint", [
-        "cursor_x", "cursor_y", "cursor_char", "cursor_hidden", "g0_charset",
+        "cursor_x", "cursor_y", "cursor_style", "cursor_hidden", "g0_charset",
         "g1_charset", "charset", "origin", "wrap"
     ]
 )
@@ -615,10 +615,10 @@ class Screen:
 
        .. versionadded:: 0.7.0
 
-    .. attribute:: cursor_char
+    .. attribute:: cursor_style
 
-       Reference to the :class:`~termscraper.screens.Char` object, holding
-       cursor attributes/style and character. See
+       Reference to the :class:`~termscraper.screens.CharStyle` object, holding
+       cursor attributes/style. See
        :meth:`~termscraper.screens.Screen.select_graphic_rendition`
        for details.
 
@@ -675,13 +675,17 @@ class Screen:
        for a description of the presentational component, implemented
        by ``Screen``.
     """
-    def update_default_char(self):
+    def update_default_char_and_style(self):
         """
         Update screen.default_char with an empty character with default
         foreground and background colors based on the current mode.
+
+        screen.default_style is update with the style of the
+        new screen.default_char
         """
         ref = self._default_char_reversed if mo.DECSCNM in self.mode else self._default_char_normal
         self.default_char = ref
+        self.default_style = ref.style
 
     def default_line(self):
         return Line(self.new_empty_char())
@@ -865,7 +869,7 @@ class Screen:
         self.margins = Margins(0, self.lines - 1)
 
         self.mode = set([mo.DECAWM, mo.DECTCEM])
-        self.update_default_char()
+        self.update_default_char_and_style()
 
         self.title = ""
         self.icon_name = ""
@@ -879,7 +883,7 @@ class Screen:
         # we aim to support VT102 / VT220 and linux -- we use n = 8.
         self.tabstops = set(range(8, self.columns, 8))
 
-        self.cursor_char = self.new_empty_char()
+        self.cursor_style = self.default_style
         self.cursor_x, self.cursor_y = 0, 0
         self.cursor_hidden = False
         self.cursor_position()
@@ -979,7 +983,7 @@ class Screen:
                 self.dirty.update(range(self.lines))
 
         self.mode.update(modes)
-        self.update_default_char()
+        self.update_default_char_and_style()
 
         # When DECOLM mode is set, the screen is erased and the cursor
         # moves to the home position.
@@ -1020,7 +1024,7 @@ class Screen:
                 self.dirty.update(range(self.lines))
 
         self.mode.difference_update(modes)
-        self.update_default_char()
+        self.update_default_char_and_style()
 
         # Lines below follow the logic in :meth:`set_mode`.
         if mo.DECCOLM in modes:
@@ -1092,7 +1096,7 @@ class Screen:
         columns = self.columns
         buffer = self._buffer
         mode = self.mode
-        style = self.cursor_char.style
+        style = self.cursor_style
 
         # Note: checking for IRM here makes sense because it would be
         # checked on every char in data otherwise.
@@ -1310,7 +1314,7 @@ class Screen:
         """Push the current cursor position onto the stack."""
         self.savepoints.append(
             Savepoint(
-                self.cursor_x, self.cursor_y, copy.deepcopy(self.cursor_char),
+                self.cursor_x, self.cursor_y, self.cursor_style,
                 self.cursor_hidden, self.g0_charset, self.g1_charset,
                 self.charset, mo.DECOM in self.mode, mo.DECAWM in self.mode
             )
@@ -1332,7 +1336,7 @@ class Screen:
             if savepoint.wrap:
                 self.set_mode(mo.DECAWM)
 
-            self.cursor_char = savepoint.cursor_char
+            self.cursor_style = savepoint.cursor_style
             self.cursor_x = savepoint.cursor_x
             self.cursor_y = savepoint.cursor_y
             self.cursor_hidden = savepoint.cursor_hidden
@@ -1513,7 +1517,7 @@ class Screen:
 
         # If the line's default char is equivalent to our cursor, overwriting
         # a char in the line is equivalent to delete it if from the line
-        if line.default == self.cursor_char:
+        if line.default.style == self.cursor_style:
             pop = line.pop
             non_empty_x = sorted(line)
             begin = bisect_left(non_empty_x, self.cursor_x)
@@ -1527,8 +1531,8 @@ class Screen:
 
         else:
             write_data = line.write_data
-            data = self.cursor_char.data
-            style = self.cursor_char.style
+            data = " "
+            style = self.cursor_style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
             for x in range(
@@ -1563,7 +1567,7 @@ class Screen:
 
         # If the line's default char is equivalent to our cursor, overwriting
         # a char in the line is equivalent to delete it if from the line
-        if line.default == self.cursor_char:
+        if line.default.style == self.cursor_style:
             pop = line.pop
             non_empty_x = sorted(line)
             begin = bisect_left(non_empty_x, low)
@@ -1577,8 +1581,8 @@ class Screen:
 
         else:
             write_data = line.write_data
-            data = self.cursor_char.data
-            style = self.cursor_char.style
+            data = " "
+            style = self.cursor_style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
             for x in range(low, high):
@@ -1621,7 +1625,7 @@ class Screen:
         # if we were requested to clear the whole screen and
         # the cursor's attrs are the same than the screen's default
         # then this is equivalent to delete all the lines from the buffer
-        if (how == 2 or how == 3) and self.default_char == self.cursor_char:
+        if (how == 2 or how == 3) and self.default_style == self.cursor_style:
             buffer.clear()
             return
 
@@ -1630,7 +1634,7 @@ class Screen:
         # (screen.default_char).
         # If a deleted line is then requested, a new line will
         # be added with screen.default_char as its default char
-        if self.default_char == self.cursor_char:
+        if self.default_style == self.cursor_style:
             pop = buffer.pop
             non_empty_y = sorted(buffer)
             begin = bisect_left(non_empty_y, top)  # inclusive
@@ -1639,8 +1643,8 @@ class Screen:
             list(map(pop, non_empty_y[begin:end]))
 
         else:
-            data = self.cursor_char.data
-            style = self.cursor_char.style
+            data = " "
+            style = self.cursor_style
             for y in range(top, bottom):
                 line = buffer.line_at(y)
                 write_data = line.write_data
@@ -1830,7 +1834,7 @@ class Screen:
 
         # Fast path for resetting all attributes.
         if not attrs or attrs == (0, ) or self.disabled_display_graphic:
-            self.cursor_char = self.default_char.copy()
+            self.cursor_style = self.default_style
             return
         else:
             attrs = list(reversed(attrs))
@@ -1868,7 +1872,7 @@ class Screen:
                 except IndexError:
                     pass
 
-        self.cursor_char.style = self.cursor_char.style._replace(**replace)
+        self.cursor_style = self.cursor_style._replace(**replace)
 
     def report_device_attributes(self, mode=0, **kwargs):
         """Report terminal identity.
