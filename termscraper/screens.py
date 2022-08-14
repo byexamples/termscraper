@@ -538,7 +538,7 @@ class BufferView:
         try:
             line = self._buffer[y]
         except KeyError:
-            line = Line(self._screen.default_char)
+            line = Line(self._screen.new_empty_char())
 
         return LineView(line)
 
@@ -678,11 +678,15 @@ class Screen:
     @property
     def default_char(self):
         """An empty character with default foreground and background colors."""
-        style = self._default_style_reversed if mo.DECSCNM in self.mode else self._default_style
-        return Char(" ", style)
+        ref = self._default_char_reversed if mo.DECSCNM in self.mode else self._default_char_normal
+        return ref
 
     def default_line(self):
-        return Line(self.default_char)
+        return Line(self.new_empty_char())
+
+    def new_empty_char(self):
+        """Return a fresh copy of the current char reference for the empty chars."""
+        return self.default_char.copy()
 
     def __init__(
         self,
@@ -698,7 +702,7 @@ class Screen:
         self.dirty = set() if track_dirty_lines else _NullSet()
         self.disabled_display_graphic = disable_display_graphic
 
-        self._default_style = CharStyle(
+        style_normal = CharStyle(
             fg="default",
             bg="default",
             bold=False,
@@ -708,9 +712,10 @@ class Screen:
             reverse=False,
             blink=False
         )
-        self._default_style_reversed = self._default_style._replace(
-            reverse=True
-        )
+        style_reversed = style_normal._replace(reverse=True)
+
+        self._default_char_normal = Char(" ", style_normal)
+        self._default_char_reversed = Char(" ", style_reversed)
 
         self.reset()
 
@@ -871,7 +876,7 @@ class Screen:
         # we aim to support VT102 / VT220 and linux -- we use n = 8.
         self.tabstops = set(range(8, self.columns, 8))
 
-        self.cursor_char = self.default_char.copy()
+        self.cursor_char = self.new_empty_char()
         self.cursor_x, self.cursor_y = 0, 0
         self.cursor_hidden = False
         self.cursor_position()
@@ -1798,7 +1803,7 @@ class Screen:
     def alignment_display(self):
         """Fills screen with uppercase E's for screen focus and alignment."""
         self.dirty.update(range(self.lines))
-        style = self._default_style
+        style = self.default_char.style
         for y in range(self.lines):
             line = self._buffer.line_at(y)
             for x in range(self.columns):
@@ -1820,7 +1825,7 @@ class Screen:
 
         # Fast path for resetting all attributes.
         if not attrs or attrs == (0, ) or self.disabled_display_graphic:
-            self.cursor_char = self.default_char
+            self.cursor_char = self.default_char.copy()
             return
         else:
             attrs = list(reversed(attrs))
