@@ -297,8 +297,8 @@ def test_set_mode():
         for char in tolist(screen)[line]:
             assert char == screen.default_char
     assert screen.columns == 132
-    assert screen.cursor.x == 0
-    assert screen.cursor.y == 0
+    assert screen.cursor_x == 0
+    assert screen.cursor_y == 0
     screen.reset_mode(mo.DECCOLM)
     assert screen.columns == 3
 
@@ -306,8 +306,8 @@ def test_set_mode():
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"])
     screen.cursor_position(1, 1)
     screen.set_mode(mo.DECOM)
-    assert screen.cursor.x == 0
-    assert screen.cursor.y == 0
+    assert screen.cursor_x == 0
+    assert screen.cursor_y == 0
 
     # Test mo.DECSCNM mode
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"])
@@ -341,12 +341,12 @@ def test_draw():
         screen.draw(ch)
 
     assert screen.display == ["abc", "   ", "   "]
-    assert (screen.cursor.y, screen.cursor.x) == (0, 3)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 3)
     consistency_asserts(screen)
 
     # ... one` more character -- now we got a linefeed!
     screen.draw("a")
-    assert (screen.cursor.y, screen.cursor.x) == (1, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 1)
     consistency_asserts(screen)
 
     # ``DECAWM`` is off.
@@ -357,13 +357,13 @@ def test_draw():
         screen.draw(ch)
 
     assert screen.display == ["abc", "   ", "   "]
-    assert (screen.cursor.y, screen.cursor.x) == (0, 3)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 3)
     consistency_asserts(screen)
 
     # No linefeed is issued on the end of the line ...
     screen.draw("a")
     assert screen.display == ["aba", "   ", "   "]
-    assert (screen.cursor.y, screen.cursor.x) == (0, 3)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 3)
     consistency_asserts(screen)
 
     # ``IRM`` mode is on, expecting new characters to move the old ones
@@ -392,7 +392,7 @@ def test_draw_russian():
 def test_draw_multiple_chars():
     screen = termscraper.Screen(10, 1)
     screen.draw("foobar")
-    assert screen.cursor.x == 6
+    assert screen.cursor_x == 6
     assert screen.display == ["foobar    "]
     consistency_asserts(screen)
 
@@ -410,7 +410,7 @@ def test_draw_width2():
     # Example from https://github.com/selectel/termscraper/issues/9
     screen = termscraper.Screen(10, 1)
     screen.draw("コンニチハ")
-    assert screen.cursor.x == screen.columns
+    assert screen.cursor_x == screen.columns
     consistency_asserts(screen)
 
 
@@ -418,7 +418,7 @@ def test_draw_width2_line_end():
     # Test from https://github.com/selectel/termscraper/issues/55
     screen = termscraper.Screen(10, 1)
     screen.draw(" コンニチハ")
-    assert screen.cursor.x == screen.columns
+    assert screen.cursor_x == screen.columns
     consistency_asserts(screen)
 
 
@@ -475,13 +475,13 @@ def test_draw_width0_decawm_off():
     screen = termscraper.Screen(10, 1)
     screen.reset_mode(mo.DECAWM)
     screen.draw(" コンニチハ")
-    assert screen.cursor.x == screen.columns
+    assert screen.cursor_x == screen.columns
     consistency_asserts(screen)
 
     # The following should not advance the cursor.
     screen.draw("\N{ZERO WIDTH SPACE}")
     screen.draw("\u0007")  # DELETE.
-    assert screen.cursor.x == screen.columns
+    assert screen.cursor_x == screen.columns
     consistency_asserts(screen)
 
 
@@ -527,22 +527,22 @@ def test_display_wcwidth():
 
 def test_carriage_return():
     screen = termscraper.Screen(3, 3)
-    screen.cursor.x = 2
+    screen.cursor_x = 2
     screen.carriage_return()
 
-    assert screen.cursor.x == 0
+    assert screen.cursor_x == 0
     consistency_asserts(screen)
 
 
 def test_index():
     screen = update(termscraper.Screen(2, 2), ["wo", "ot"], colored=[1])
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["wo", "ot"]
 
     # a) indexing on a row that isn't the last should just move
     # the cursor down.
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["wo", "ot"]
     assert tolist(screen) == [
         [Char("w"), Char("o")],
@@ -553,7 +553,7 @@ def test_index():
     # b) indexing on the last row should push everything up and
     # create a new row at the bottom.
     screen.index()
-    assert screen.cursor.y == 1
+    assert screen.cursor_y == 1
     assert screen.display == ["ot", "  "]
     assert tolist(screen) == [
         [Char("o", fg="red"), Char("t", fg="red")],
@@ -567,11 +567,11 @@ def test_index():
     # note: margins are 0-based inclusive indexes for top and bottom
     # however, set_margins are 1-based inclusive indexes
     screen.set_margins(2, 4)
-    screen.cursor.y = 3
+    screen.cursor_y = 3
 
     # ... go!
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (3, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (3, 0)
     assert screen.display == ["bo", "th", "er", "  ", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o", "default")],
@@ -584,7 +584,7 @@ def test_index():
 
     # ... and again ...
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (3, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (3, 0)
     assert screen.display == ["bo", "er", "  ", "  ", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -597,7 +597,7 @@ def test_index():
 
     # ... and again ...
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (3, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (3, 0)
     assert screen.display == ["bo", "  ", "  ", "  ", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -610,7 +610,7 @@ def test_index():
 
     # look, nothing changes!
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (3, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (3, 0)
     assert screen.display == ["bo", "  ", "  ", "  ", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -632,7 +632,7 @@ def test_index_sparse():
              ],
             colored=[2],
             write_spaces=False)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == [
             "wo   ",
             "     ",
@@ -644,7 +644,7 @@ def test_index_sparse():
     # a) indexing on a row that isn't the last should just move
     # the cursor down.
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == [
             "wo   ",
             "     ",
@@ -667,7 +667,7 @@ def test_index_sparse():
     screen.index()
     screen.index()
     screen.index()
-    assert screen.cursor.y == 4
+    assert screen.cursor_y == 4
     assert screen.display == [
             "     ",
             " o t ",
@@ -686,7 +686,7 @@ def test_index_sparse():
 
     # again
     screen.index()
-    assert screen.cursor.y == 4
+    assert screen.cursor_y == 4
     assert screen.display == [
             " o t ",
             "     ",
@@ -707,7 +707,7 @@ def test_index_sparse():
     screen.index()
     screen.index()
     screen.index()
-    assert (screen.cursor.y, screen.cursor.x) == (4, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (4, 0)
     assert screen.display == [
             "     ",
             "     ",
@@ -731,7 +731,7 @@ def test_reverse_index():
     # a) reverse indexing on the first row should push rows down
     # and create a new row at the top.
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert tolist(screen) == [
         [screen.default_char, screen.default_char],
         [Char("w", fg="red"), Char("o", fg="red")]
@@ -740,7 +740,7 @@ def test_reverse_index():
 
     # b) once again ...
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert tolist(screen) == [
         [screen.default_char, screen.default_char],
         [screen.default_char, screen.default_char],
@@ -751,11 +751,11 @@ def test_reverse_index():
     screen = update(termscraper.Screen(2, 5), ["bo", "sh", "th", "er", "oh"],
                     colored=[2, 3])
     screen.set_margins(2, 4)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
 
     # ... go!
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["bo", "  ", "sh", "th", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -768,7 +768,7 @@ def test_reverse_index():
 
     # ... and again ...
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["bo", "  ", "  ", "sh", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -781,7 +781,7 @@ def test_reverse_index():
 
     # ... and again ...
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["bo", "  ", "  ", "  ", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -794,7 +794,7 @@ def test_reverse_index():
 
     # look, nothing changes!
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["bo", "  ", "  ", "  ", "oh"]
     assert tolist(screen) == [
         [Char("b"), Char("o")],
@@ -816,7 +816,7 @@ def test_reverse_index_sparse():
              ],
             colored=[2],
             write_spaces=False)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == [
             "wo   ",
             "     ",
@@ -829,7 +829,7 @@ def test_reverse_index_sparse():
     # a) reverse indexing on the first row should push rows down
     # and create a new row at the top.
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == [
             "     ",
             "wo   ",
@@ -848,7 +848,7 @@ def test_reverse_index_sparse():
 
     # again
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == [
             "     ",
             "     ",
@@ -867,7 +867,7 @@ def test_reverse_index_sparse():
 
     # again
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == [
             "     ",
             "     ",
@@ -887,7 +887,7 @@ def test_reverse_index_sparse():
     # leave the screen cleared
     screen.reverse_index()
     screen.reverse_index()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == [
             "     ",
             "     ",
@@ -910,16 +910,16 @@ def test_linefeed():
 
     # a) LNM on by default (that's what `vttest` forces us to do).
     assert mo.LNM in screen.mode
-    screen.cursor.x, screen.cursor.y = 1, 0
+    screen.cursor_x, screen.cursor_y = 1, 0
     screen.linefeed()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     consistency_asserts(screen)
 
     # b) LNM off.
     screen.reset_mode(mo.LNM)
-    screen.cursor.x, screen.cursor.y = 1, 0
+    screen.cursor_x, screen.cursor_y = 1, 0
     screen.linefeed()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 1)
     consistency_asserts(screen)
 
 
@@ -928,10 +928,10 @@ def test_linefeed_margins():
     screen = termscraper.Screen(80, 24)
     screen.set_margins(3, 27)
     screen.cursor_position()
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     consistency_asserts(screen)
     screen.linefeed()
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     consistency_asserts(screen)
 
 
@@ -945,20 +945,20 @@ def test_tabstops():
     screen.clear_tab_stop(3)
     assert not screen.tabstops
 
-    screen.cursor.x = 1
+    screen.cursor_x = 1
     screen.set_tab_stop()
-    screen.cursor.x = 8
+    screen.cursor_x = 8
     screen.set_tab_stop()
 
-    screen.cursor.x = 0
+    screen.cursor_x = 0
     screen.tab()
-    assert screen.cursor.x == 1
+    assert screen.cursor_x == 1
     screen.tab()
-    assert screen.cursor.x == 8
+    assert screen.cursor_x == 8
     screen.tab()
-    assert screen.cursor.x == 9
+    assert screen.cursor_x == 9
     screen.tab()
-    assert screen.cursor.x == 9
+    assert screen.cursor_x == 9
     consistency_asserts(screen)
 
 
@@ -967,9 +967,9 @@ def test_clear_tabstops():
     screen.clear_tab_stop(3)
 
     # a) clear a tabstop at current cursor location
-    screen.cursor.x = 1
+    screen.cursor_x = 1
     screen.set_tab_stop()
-    screen.cursor.x = 5
+    screen.cursor_x = 5
     screen.set_tab_stop()
     screen.clear_tab_stop()
 
@@ -983,7 +983,7 @@ def test_clear_tabstops():
 
     # b) all tabstops
     screen.set_tab_stop()
-    screen.cursor.x = 9
+    screen.cursor_x = 9
     screen.set_tab_stop()
     screen.clear_tab_stop(3)
 
@@ -993,12 +993,12 @@ def test_clear_tabstops():
 
 def test_backspace():
     screen = termscraper.Screen(2, 2)
-    assert screen.cursor.x == 0
+    assert screen.cursor_x == 0
     screen.backspace()
-    assert screen.cursor.x == 0
-    screen.cursor.x = 1
+    assert screen.cursor_x == 0
+    screen.cursor_x = 1
     screen.backspace()
-    assert screen.cursor.x == 0
+    assert screen.cursor_x == 0
     consistency_asserts(screen)
 
 
@@ -1006,17 +1006,17 @@ def test_save_cursor():
     # a) cursor position
     screen = termscraper.Screen(10, 10)
     screen.save_cursor()
-    screen.cursor.x, screen.cursor.y = 3, 5
+    screen.cursor_x, screen.cursor_y = 3, 5
     screen.save_cursor()
-    screen.cursor.x, screen.cursor.y = 4, 4
+    screen.cursor_x, screen.cursor_y = 4, 4
 
     screen.restore_cursor()
-    assert screen.cursor.x == 3
-    assert screen.cursor.y == 5
+    assert screen.cursor_x == 3
+    assert screen.cursor_y == 5
 
     screen.restore_cursor()
-    assert screen.cursor.x == 0
-    assert screen.cursor.y == 0
+    assert screen.cursor_x == 0
+    assert screen.cursor_y == 0
 
     # b) modes
     screen = termscraper.Screen(10, 10)
@@ -1047,10 +1047,10 @@ def test_save_cursor():
 def test_restore_cursor_with_none_saved():
     screen = termscraper.Screen(10, 10)
     screen.set_mode(mo.DECOM)
-    screen.cursor.x, screen.cursor.y = 5, 5
+    screen.cursor_x, screen.cursor_y = 5, 5
     screen.restore_cursor()
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert mo.DECOM not in screen.mode
 
 
@@ -1064,7 +1064,7 @@ def test_restore_cursor_out_of_bounds():
     screen.reset()
     screen.restore_cursor()
 
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     consistency_asserts(screen)
 
     # b) origin mode is on.
@@ -1077,7 +1077,7 @@ def test_restore_cursor_out_of_bounds():
     screen.set_margins(2, 3)
     screen.restore_cursor()
 
-    assert (screen.cursor.y, screen.cursor.x) == (2, 4)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 4)
     consistency_asserts(screen)
 
 
@@ -1086,7 +1086,7 @@ def test_insert_lines():
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"], colored=[1])
     screen.insert_lines()
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "sam", "is "]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1097,7 +1097,7 @@ def test_insert_lines():
 
 
     screen.insert_lines(1)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "sam"]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1107,7 +1107,7 @@ def test_insert_lines():
     consistency_asserts(screen)
 
     screen.insert_lines(1)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "   "]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1117,7 +1117,7 @@ def test_insert_lines():
     consistency_asserts(screen)
 
     screen.insert_lines(1)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "   "]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1129,7 +1129,7 @@ def test_insert_lines():
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"], colored=[1])
     screen.insert_lines(2)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "sam"]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1149,7 +1149,7 @@ def test_insert_lines():
 
     screen.insert_lines(2)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "sam", "   ", "foo"]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1162,7 +1162,7 @@ def test_insert_lines():
 
     screen.insert_lines(1)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "   ", "sam", "   "]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1175,7 +1175,7 @@ def test_insert_lines():
 
     screen.insert_lines(1)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "   ", "   ", "sam"]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1190,10 +1190,10 @@ def test_insert_lines():
     screen = update(termscraper.Screen(3, 5), ["sam", "is ", "foo", "bar", "baz"],
                     colored=[2, 3])
     screen.set_margins(1, 4)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.insert_lines(1)
 
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "   ", "is ", "foo", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1207,10 +1207,10 @@ def test_insert_lines():
     screen = update(termscraper.Screen(3, 5), ["sam", "is ", "foo", "bar", "baz"],
                     colored=[2, 3])
     screen.set_margins(1, 3)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.insert_lines(1)
 
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "   ", "is ", "bar",  "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1222,7 +1222,7 @@ def test_insert_lines():
     consistency_asserts(screen)
 
     screen.insert_lines(2)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "   ", "   ", "bar",  "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1237,10 +1237,10 @@ def test_insert_lines():
     screen = update(termscraper.Screen(3, 5), ["sam", "is ", "foo", "bar", "baz"],
                     colored=[2, 3])
     screen.set_margins(2, 4)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.insert_lines(20)
 
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "   ", "   ", "   ", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1258,7 +1258,7 @@ def test_insert_lines():
     screen.set_margins(2, 4)
     screen.insert_lines(5)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["sam", "is ", "foo", "bar", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1275,7 +1275,7 @@ def test_delete_lines():
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"], colored=[1])
     screen.delete_lines()
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["is ", "foo", "   "]
     assert tolist(screen) == [
         [Char("i", fg="red"), Char("s", fg="red"), Char(" ", fg="red")],
@@ -1286,7 +1286,7 @@ def test_delete_lines():
 
     screen.delete_lines(0)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["foo", "   ", "   "]
     assert tolist(screen) == [
         [Char("f"), Char("o"), Char("o")],
@@ -1297,7 +1297,7 @@ def test_delete_lines():
 
     screen.delete_lines(0)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "   "]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1308,7 +1308,7 @@ def test_delete_lines():
 
     screen.delete_lines(0)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["   ", "   ", "   "]
     assert tolist(screen) == [
         [screen.default_char] * 3,
@@ -1321,10 +1321,10 @@ def test_delete_lines():
     screen = update(termscraper.Screen(3, 5), ["sam", "is ", "foo", "bar", "baz"],
                     colored=[2, 3])
     screen.set_margins(1, 4)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.delete_lines(1)
 
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "foo", "bar", "   ", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1338,10 +1338,10 @@ def test_delete_lines():
     screen = update(termscraper.Screen(3, 5), ["sam", "is ", "foo", "bar", "baz"],
                     colored=[2, 3])
     screen.set_margins(1, 4)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.delete_lines(2)
 
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "bar", "   ", "   ", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1361,10 +1361,10 @@ def test_delete_lines():
                      [("red", "default")] * 3,
                      None])
     screen.set_margins(1, 4)
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.delete_lines(5)
 
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sam", "   ", "   ", "   ", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1380,10 +1380,10 @@ def test_delete_lines():
     screen = update(termscraper.Screen(3, 5), ["sam", "is ", "foo", "bar", "baz"],
                     colored=[2, 3])
     screen.set_margins(2, 4)
-    screen.cursor.y = 0
+    screen.cursor_y = 0
     screen.delete_lines(5)
 
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["sam", "is ", "foo", "bar", "baz"]
     assert tolist(screen) == [
         [Char("s"), Char("a"), Char("m")],
@@ -1400,9 +1400,9 @@ def test_insert_characters():
                     colored=[0])
 
     # a) normal case
-    cursor = copy.copy(screen.cursor)
+    cursor_x, cursor_y = screen.cursor_x, screen.cursor_y
     screen.insert_characters(2)
-    assert (screen.cursor.y, screen.cursor.x) == (cursor.y, cursor.x)
+    assert (screen.cursor_y, screen.cursor_x) == (cursor_y, cursor_x)
     assert screen.display == ["  s", "is ", "foo", "bar"]
     assert tolist(screen)[0] == [
         screen.default_char,
@@ -1412,14 +1412,14 @@ def test_insert_characters():
     consistency_asserts(screen)
 
     # b) now inserting from the middle of the line
-    screen.cursor.y, screen.cursor.x = 2, 1
+    screen.cursor_y, screen.cursor_x = 2, 1
     screen.insert_characters(1)
     assert screen.display == ["  s", "is ", "f o", "bar"]
     assert tolist(screen)[2] == [Char("f"), screen.default_char, Char("o")]
     consistency_asserts(screen)
 
     # c) inserting more than we have
-    screen.cursor.y, screen.cursor.x = 3, 1
+    screen.cursor_y, screen.cursor_x = 3, 1
     screen.insert_characters(10)
     assert screen.display == ["  s", "is ", "f o", "b  "]
     assert tolist(screen)[3] == [
@@ -1430,7 +1430,7 @@ def test_insert_characters():
     consistency_asserts(screen)
 
     # insert 1 at the begin of the previously edited line
-    screen.cursor.y, screen.cursor.x = 3, 0
+    screen.cursor_y, screen.cursor_x = 3, 0
     screen.insert_characters(1)
     assert tolist(screen)[3] == [
         screen.default_char, Char("b"), screen.default_char,
@@ -1438,7 +1438,7 @@ def test_insert_characters():
     consistency_asserts(screen)
 
     # insert before the end of the line
-    screen.cursor.y, screen.cursor.x = 3, 2
+    screen.cursor_y, screen.cursor_x = 3, 2
     screen.insert_characters(1)
     assert tolist(screen)[3] == [
         screen.default_char, Char("b"), screen.default_char,
@@ -1446,7 +1446,7 @@ def test_insert_characters():
     consistency_asserts(screen)
 
     # insert enough to push outside the screen the remaining char
-    screen.cursor.y, screen.cursor.x = 3, 0
+    screen.cursor_y, screen.cursor_x = 3, 0
     screen.insert_characters(2)
     assert tolist(screen)[3] == [
         screen.default_char, screen.default_char, screen.default_char,
@@ -1478,9 +1478,9 @@ def test_insert_characters():
 
     # ! extreme cases.
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
-    screen.cursor.x = 1
+    screen.cursor_x = 1
     screen.insert_characters(3)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 1)
     assert screen.display == ["1   2"]
     assert tolist(screen)[0] == [
         Char("1", fg="red"),
@@ -1492,7 +1492,7 @@ def test_insert_characters():
     consistency_asserts(screen)
 
     screen.insert_characters(1)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 1)
     assert screen.display == ["1    "]
     assert tolist(screen)[0] == [
         Char("1", fg="red"),
@@ -1503,9 +1503,9 @@ def test_insert_characters():
     ]
     consistency_asserts(screen)
 
-    screen.cursor.x = 0
+    screen.cursor_x = 0
     screen.insert_characters(5)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["     "]
     assert tolist(screen)[0] == [
         screen.default_char,
@@ -1519,7 +1519,7 @@ def test_insert_characters():
 def test_delete_characters():
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"], colored=[0])
     screen.delete_characters(2)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["m  ", "is ", "foo"]
     assert tolist(screen)[0] == [
         Char("m", fg="red"),
@@ -1527,37 +1527,37 @@ def test_delete_characters():
     ]
     consistency_asserts(screen)
 
-    screen.cursor.y, screen.cursor.x = 2, 2
+    screen.cursor_y, screen.cursor_x = 2, 2
     screen.delete_characters()
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["m  ", "is ", "fo "]
     consistency_asserts(screen)
 
-    screen.cursor.y, screen.cursor.x = 1, 1
+    screen.cursor_y, screen.cursor_x = 1, 1
     screen.delete_characters(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 1)
     assert screen.display == ["m  ", "i  ", "fo "]
     consistency_asserts(screen)
 
     # try to erase spaces
-    screen.cursor.y, screen.cursor.x = 1, 1
+    screen.cursor_y, screen.cursor_x = 1, 1
     screen.delete_characters(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 1)
     assert screen.display == ["m  ", "i  ", "fo "]
     consistency_asserts(screen)
 
     # try to erase a whole line
-    screen.cursor.y, screen.cursor.x = 1, 0
+    screen.cursor_y, screen.cursor_x = 1, 0
     screen.delete_characters(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["m  ", "   ", "fo "]
     consistency_asserts(screen)
 
     # ! extreme cases.
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
-    screen.cursor.x = 1
+    screen.cursor_x = 1
     screen.delete_characters(3)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 1)
     assert screen.display == ["15   "]
     assert tolist(screen)[0] == [
         Char("1", fg="red"),
@@ -1569,9 +1569,9 @@ def test_delete_characters():
     consistency_asserts(screen)
 
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
-    screen.cursor.x = 2
+    screen.cursor_x = 2
     screen.delete_characters(10)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["12   "]
     assert tolist(screen)[0] == [
         Char("1", fg="red"),
@@ -1584,7 +1584,7 @@ def test_delete_characters():
 
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
     screen.delete_characters(4)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["5    "]
     assert tolist(screen)[0] == [
         Char("5", fg="red"),
@@ -1596,7 +1596,7 @@ def test_delete_characters():
     consistency_asserts(screen)
 
     screen.delete_characters(2)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["     "]
     assert tolist(screen)[0] == [
         screen.default_char,
@@ -1612,7 +1612,7 @@ def test_erase_character():
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"], colored=[0])
 
     screen.erase_characters(2)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["  m", "is ", "foo"]
     assert tolist(screen)[0] == [
         screen.default_char,
@@ -1621,38 +1621,38 @@ def test_erase_character():
     ]
     consistency_asserts(screen)
 
-    screen.cursor.y, screen.cursor.x = 2, 2
+    screen.cursor_y, screen.cursor_x = 2, 2
     screen.erase_characters()
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["  m", "is ", "fo "]
     consistency_asserts(screen)
 
-    screen.cursor.y, screen.cursor.x = 1, 1
+    screen.cursor_y, screen.cursor_x = 1, 1
     screen.erase_characters(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 1)
     assert screen.display == ["  m", "i  ", "fo "]
     consistency_asserts(screen)
 
     # erase the same erased char as before
-    screen.cursor.y, screen.cursor.x = 1, 1
+    screen.cursor_y, screen.cursor_x = 1, 1
     screen.erase_characters(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 1)
     assert screen.display == ["  m", "i  ", "fo "]
     consistency_asserts(screen)
 
     # erase the whole line
-    screen.cursor.y, screen.cursor.x = 1, 0
+    screen.cursor_y, screen.cursor_x = 1, 0
     screen.erase_characters(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["  m", "   ", "fo "]
     consistency_asserts(screen)
 
     # erase 2 chars of an already-empty line with a cursor having a different
     # attribute
     screen.select_graphic_rendition(31) # red foreground
-    screen.cursor.y, screen.cursor.x = 1, 0
+    screen.cursor_y, screen.cursor_x = 1, 0
     screen.erase_characters(2)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["  m", "   ", "fo "]
     assert tolist(screen)[1] == [
         Char(" ", fg='red'),
@@ -1663,9 +1663,9 @@ def test_erase_character():
 
     # erase 1 chars of a non-empty line with a cursor having a different
     # attribute
-    screen.cursor.y, screen.cursor.x = 2, 1
+    screen.cursor_y, screen.cursor_x = 2, 1
     screen.erase_characters(1)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 1)
     assert screen.display == ["  m", "   ", "f  "]
     assert tolist(screen)[2] == [
         Char("f"),
@@ -1676,9 +1676,9 @@ def test_erase_character():
 
     # ! extreme cases.
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
-    screen.cursor.x = 1
+    screen.cursor_x = 1
     screen.erase_characters(3)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 1)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 1)
     assert screen.display == ["1   5"]
     assert tolist(screen)[0] == [
         Char("1", fg="red"),
@@ -1690,9 +1690,9 @@ def test_erase_character():
     consistency_asserts(screen)
 
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
-    screen.cursor.x = 2
+    screen.cursor_x = 2
     screen.erase_characters(10)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["12   "]
     assert tolist(screen)[0] == [
         Char("1", fg="red"),
@@ -1705,7 +1705,7 @@ def test_erase_character():
 
     screen = update(termscraper.Screen(5, 1), ["12345"], colored=[0])
     screen.erase_characters(4)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 0)
     assert screen.display == ["    5"]
     assert tolist(screen)[0] == [
         screen.default_char,
@@ -1716,9 +1716,9 @@ def test_erase_character():
     ]
     consistency_asserts(screen)
 
-    screen.cursor.x = 2
+    screen.cursor_x = 2
     screen.erase_characters(4)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["     "]
     assert tolist(screen)[0] == [
         screen.default_char,
@@ -1740,7 +1740,7 @@ def test_erase_in_line():
 
     # a) erase from cursor to the end of line
     screen.erase_in_line(0)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["sa   ",
                               "s foo",
                               "but a",
@@ -1757,7 +1757,7 @@ def test_erase_in_line():
 
     # erase from cursor to the end of line (again, same place)
     screen.erase_in_line(0)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["sa   ",
                               "s foo",
                               "but a",
@@ -1773,9 +1773,9 @@ def test_erase_in_line():
     consistency_asserts(screen)
 
     # erase from cursor to the end of line (again but from the middle of a line))
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.erase_in_line(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 2)
     assert screen.display == ["sa   ",
                               "s    ",
                               "but a",
@@ -1791,9 +1791,9 @@ def test_erase_in_line():
     consistency_asserts(screen)
 
     # erase from cursor to the end of line erasing the whole line
-    screen.cursor.x = 0
+    screen.cursor_x = 0
     screen.erase_in_line(0)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 0)
     assert screen.display == ["sa   ",
                               "     ",
                               "but a",
@@ -1815,10 +1815,10 @@ def test_erase_in_line():
                      "but a",
                      "re yo",
                      "u?   "], colored=[0])
-    screen.cursor.x = 2
-    screen.cursor.y = 0
+    screen.cursor_x = 2
+    screen.cursor_y = 0
     screen.erase_in_line(1)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["    i",
                               "s foo",
                               "but a",
@@ -1841,7 +1841,7 @@ def test_erase_in_line():
                      "re yo",
                      "u?   "], colored=[0])
     screen.erase_in_line(2)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 2)
     assert screen.display == ["     ",
                               "s foo",
                               "but a",
@@ -1853,9 +1853,9 @@ def test_erase_in_line():
     # d) erase with a non-default attributes cursor
     screen.select_graphic_rendition(31) # red foreground
 
-    screen.cursor.y = 1
+    screen.cursor_y = 1
     screen.erase_in_line(2)
-    assert (screen.cursor.y, screen.cursor.x) == (1, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (1, 2)
     assert screen.display == ["     ",
                               "     ",
                               "but a",
@@ -1864,9 +1864,9 @@ def test_erase_in_line():
     assert tolist(screen)[1] == [Char(" ", fg="red")] * 5
     consistency_asserts(screen)
 
-    screen.cursor.y = 2
+    screen.cursor_y = 2
     screen.erase_in_line(1)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["     ",
                               "     ",
                               "    a",
@@ -1894,7 +1894,7 @@ def test_erase_in_display():
     # a) erase from cursor to the end of the display, including
     #    the cursor
     screen.erase_in_display(0)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["sam i",
                               "s foo",
                               "bu   ",
@@ -1920,7 +1920,7 @@ def test_erase_in_display():
                      "re yo",
                      "u?   "], colored=[2, 3])
     screen.erase_in_display(1)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["     ",
                               "     ",
                               "    a",
@@ -1939,7 +1939,7 @@ def test_erase_in_display():
 
     # c) erase the while display
     screen.erase_in_display(2)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["     ",
                               "     ",
                               "     ",
@@ -2003,11 +2003,11 @@ def test_erase_in_display():
                      "re yo",
                      "u?   "], colored=[2, 3])
 
-    screen.cursor.x = 2
-    screen.cursor.y = 2
+    screen.cursor_x = 2
+    screen.cursor_y = 2
     screen.select_graphic_rendition(31) # red foreground
     screen.erase_in_display(1)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["     ",
                               "     ",
                               "    a",
@@ -2025,7 +2025,7 @@ def test_erase_in_display():
     consistency_asserts(screen)
 
     screen.erase_in_display(3)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["     ",
                               "     ",
                               "     ",
@@ -2042,12 +2042,12 @@ def test_erase_in_display():
 
     # erase a clean screen (reset) from the begin to cursor
     screen.reset()
-    screen.cursor.y = 2
-    screen.cursor.x = 2
+    screen.cursor_y = 2
+    screen.cursor_x = 2
     screen.select_graphic_rendition(31) # red foreground
 
     screen.erase_in_display(1)
-    assert (screen.cursor.y, screen.cursor.x) == (2, 2)
+    assert (screen.cursor_y, screen.cursor_x) == (2, 2)
     assert screen.display == ["     ",
                               "     ",
                               "     ",
@@ -2067,67 +2067,67 @@ def test_cursor_up():
 
     # Moving the cursor up at the top doesn't do anything
     screen.cursor_up(1)
-    assert screen.cursor.y == 0
+    assert screen.cursor_y == 0
 
-    screen.cursor.y = 1
+    screen.cursor_y = 1
 
     # Moving the cursor past the top moves it to the top
     screen.cursor_up(10)
-    assert screen.cursor.y == 0
+    assert screen.cursor_y == 0
 
-    screen.cursor.y = 5
+    screen.cursor_y = 5
     # Can move the cursor more than one up.
     screen.cursor_up(3)
-    assert screen.cursor.y == 2
+    assert screen.cursor_y == 2
 
 
 def test_cursor_down():
     screen = termscraper.Screen(10, 10)
 
     # Moving the cursor down at the bottom doesn't do anything
-    screen.cursor.y = 9
+    screen.cursor_y = 9
     screen.cursor_down(1)
-    assert screen.cursor.y == 9
+    assert screen.cursor_y == 9
 
-    screen.cursor.y = 8
+    screen.cursor_y = 8
 
     # Moving the cursor past the bottom moves it to the bottom
     screen.cursor_down(10)
-    assert screen.cursor.y == 9
+    assert screen.cursor_y == 9
 
-    screen.cursor.y = 5
+    screen.cursor_y = 5
     # Can move the cursor more than one down.
     screen.cursor_down(3)
-    assert screen.cursor.y == 8
+    assert screen.cursor_y == 8
 
 
 def test_cursor_back():
     screen = termscraper.Screen(10, 10)
 
     # Moving the cursor left at the margin doesn't do anything
-    screen.cursor.x = 0
+    screen.cursor_x = 0
     screen.cursor_back(1)
-    assert screen.cursor.x == 0
+    assert screen.cursor_x == 0
 
-    screen.cursor.x = 3
+    screen.cursor_x = 3
 
     # Moving the cursor past the left margin moves it to the left margin
     screen.cursor_back(10)
-    assert screen.cursor.x == 0
+    assert screen.cursor_x == 0
 
-    screen.cursor.x = 5
+    screen.cursor_x = 5
     # Can move the cursor more than one back.
     screen.cursor_back(3)
-    assert screen.cursor.x == 2
+    assert screen.cursor_x == 2
 
 
 def test_cursor_back_last_column():
     screen = termscraper.Screen(13, 1)
     screen.draw("Hello, world!")
-    assert screen.cursor.x == screen.columns
+    assert screen.cursor_x == screen.columns
 
     screen.cursor_back(5)
-    assert screen.cursor.x == (screen.columns - 1) - 5
+    assert screen.cursor_x == (screen.columns - 1) - 5
     consistency_asserts(screen)
 
 
@@ -2135,19 +2135,19 @@ def test_cursor_forward():
     screen = termscraper.Screen(10, 10)
 
     # Moving the cursor right at the margin doesn't do anything
-    screen.cursor.x = 9
+    screen.cursor_x = 9
     screen.cursor_forward(1)
-    assert screen.cursor.x == 9
+    assert screen.cursor_x == 9
 
     # Moving the cursor past the right margin moves it to the right margin
-    screen.cursor.x = 8
+    screen.cursor_x = 8
     screen.cursor_forward(10)
-    assert screen.cursor.x == 9
+    assert screen.cursor_x == 9
 
     # Can move the cursor more than one forward.
-    screen.cursor.x = 5
+    screen.cursor_x = 5
     screen.cursor_forward(3)
-    assert screen.cursor.x == 8
+    assert screen.cursor_x == 8
 
 
 def test_cursor_position():
@@ -2155,32 +2155,32 @@ def test_cursor_position():
 
     # a) testing that we expect 1-indexed values
     screen.cursor_position(5, 10)
-    assert (screen.cursor.y, screen.cursor.x) == (4, 9)
+    assert (screen.cursor_y, screen.cursor_x) == (4, 9)
 
     # b) but (0, 0) is also accepted and should be the same as (1, 1)
     screen.cursor_position(0, 10)
-    assert (screen.cursor.y, screen.cursor.x) == (0, 9)
+    assert (screen.cursor_y, screen.cursor_x) == (0, 9)
 
     # c) moving outside the margins constrains to within the screen
     #    bounds
     screen.cursor_position(100, 5)
-    assert (screen.cursor.y, screen.cursor.x) == (9, 4)
+    assert (screen.cursor_y, screen.cursor_x) == (9, 4)
 
     screen.cursor_position(5, 100)
-    assert (screen.cursor.y, screen.cursor.x) == (4, 9)
+    assert (screen.cursor_y, screen.cursor_x) == (4, 9)
 
     # d) DECOM on
     screen.set_margins(5, 9)
     screen.set_mode(mo.DECOM)
     screen.cursor_position()
-    assert (screen.cursor.y, screen.cursor.x) == (4, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (4, 0)
 
     screen.cursor_position(2, 0)
-    assert (screen.cursor.y, screen.cursor.x) == (5, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (5, 0)
 
     # Note that cursor position doesn't change.
     screen.cursor_position(10, 0)
-    assert (screen.cursor.y, screen.cursor.x) == (5, 0)
+    assert (screen.cursor_y, screen.cursor_x) == (5, 0)
 
 
 def test_unicode():
@@ -2337,7 +2337,7 @@ def test_fuzzy_insert_characters():
                         # set_margins is 1-based indexes
                         screen.set_margins(top=margins[0]+1, bottom=margins[1]+1)
 
-                    screen.cursor.x = at
+                    screen.cursor_x = at
                     screen.insert_characters(count)
 
                     # screen.insert_characters are not margins-aware so they
@@ -2380,7 +2380,7 @@ def test_fuzzy_delete_characters():
                         # set_margins is 1-based indexes
                         screen.set_margins(top=margins[0]+1, bottom=margins[1]+1)
 
-                    screen.cursor.x = at
+                    screen.cursor_x = at
                     screen.delete_characters(count)
 
                     # screen.delete_characters are not margins-aware so they
@@ -2424,7 +2424,7 @@ def test_fuzzy_erase_characters():
                         # set_margins is 1-based indexes
                         screen.set_margins(top=margins[0]+1, bottom=margins[1]+1)
 
-                    screen.cursor.x = at
+                    screen.cursor_x = at
                     screen.erase_characters(count)
 
                     expected_line = list(line)
@@ -2465,7 +2465,7 @@ def test_fuzzy_insert_lines():
                         # set_margins is 1-based indexes
                         screen.set_margins(top=margins[0]+1, bottom=margins[1]+1)
 
-                    screen.cursor.y = at
+                    screen.cursor_y = at
                     screen.insert_lines(count)
 
                     expected_lines = splice(lines, at, count, ["   "], margins)
@@ -2504,7 +2504,7 @@ def test_fuzzy_delete_lines():
                         # set_margins is 1-based indexes
                         screen.set_margins(top=margins[0]+1, bottom=margins[1]+1)
 
-                    screen.cursor.y = at
+                    screen.cursor_y = at
                     screen.delete_lines(count)
 
                     expected_lines = splice(lines, at, (-1)*count, ["   "], margins)

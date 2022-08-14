@@ -40,7 +40,7 @@ def test_mark_single_line():
     screen.dirty.clear()
     screen.draw("f")
     assert len(screen.dirty) == 1
-    assert screen.cursor.y in screen.dirty
+    assert screen.cursor_y in screen.dirty
 
     # b) rest ...
     for method in ["insert_characters", "delete_characters",
@@ -48,7 +48,7 @@ def test_mark_single_line():
         screen.dirty.clear()
         getattr(screen, method)()
         assert len(screen.dirty) == 1
-        assert screen.cursor.y in screen.dirty
+        assert screen.cursor_y in screen.dirty
         consistency_asserts(screen)
 
 
@@ -104,7 +104,7 @@ def test_insert_delete_lines():
     for method in ["insert_lines", "delete_lines"]:
         screen.dirty.clear()
         getattr(screen, method)()
-        assert screen.dirty == set(range(screen.cursor.y, screen.lines))
+        assert screen.dirty == set(range(screen.cursor_y, screen.lines))
         consistency_asserts(screen)
 
 
@@ -115,13 +115,13 @@ def test_erase_in_display():
     # a) from cursor to the end of the screen.
     screen.dirty.clear()
     screen.erase_in_display()
-    assert screen.dirty == set(range(screen.cursor.y, screen.lines))
+    assert screen.dirty == set(range(screen.cursor_y, screen.lines))
     consistency_asserts(screen)
 
     # b) from the beginning of the screen to cursor.
     screen.dirty.clear()
     screen.erase_in_display(1)
-    assert screen.dirty == set(range(0, screen.cursor.y + 1))
+    assert screen.dirty == set(range(0, screen.cursor_y + 1))
     consistency_asserts(screen)
 
     # c) whole screen.
@@ -143,13 +143,13 @@ def test_draw_wrap():
     # fill every character cell on the first row
     for _ in range(80):
         screen.draw("g")
-    assert screen.cursor.y == 0
+    assert screen.cursor_y == 0
     screen.dirty.clear()
     consistency_asserts(screen)
 
     # now write one more character which should cause wrapping
     screen.draw("h")
-    assert screen.cursor.y == 1
+    assert screen.cursor_y == 1
     # regression test issue #36 where the wrong line was marked as
     # dirty
     assert screen.dirty == set([0, 1])
@@ -160,6 +160,6 @@ def test_draw_multiple_chars_wrap():
     screen = termscraper.Screen(5, 2)
     screen.dirty.clear()
     screen.draw("1234567890")
-    assert screen.cursor.y == 1
+    assert screen.cursor_y == 1
     assert screen.dirty == set([0, 1])
     consistency_asserts(screen)
