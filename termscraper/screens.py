@@ -675,11 +675,13 @@ class Screen:
        for a description of the presentational component, implemented
        by ``Screen``.
     """
-    @property
-    def default_char(self):
-        """An empty character with default foreground and background colors."""
+    def update_default_char(self):
+        """
+        Update screen.default_char with an empty character with default
+        foreground and background colors based on the current mode.
+        """
         ref = self._default_char_reversed if mo.DECSCNM in self.mode else self._default_char_normal
-        return ref
+        self.default_char = ref
 
     def default_line(self):
         return Line(self.new_empty_char())
@@ -863,6 +865,7 @@ class Screen:
         self.margins = Margins(0, self.lines - 1)
 
         self.mode = set([mo.DECAWM, mo.DECTCEM])
+        self.update_default_char()
 
         self.title = ""
         self.icon_name = ""
@@ -976,6 +979,7 @@ class Screen:
                 self.dirty.update(range(self.lines))
 
         self.mode.update(modes)
+        self.update_default_char()
 
         # When DECOLM mode is set, the screen is erased and the cursor
         # moves to the home position.
@@ -1016,6 +1020,7 @@ class Screen:
                 self.dirty.update(range(self.lines))
 
         self.mode.difference_update(modes)
+        self.update_default_char()
 
         # Lines below follow the logic in :meth:`set_mode`.
         if mo.DECCOLM in modes:
