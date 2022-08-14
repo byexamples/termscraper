@@ -1518,7 +1518,7 @@ class Screen:
 
         # If the line's default char is equivalent to our cursor, overwriting
         # a char in the line is equivalent to delete it if from the line
-        if line.default.style == self.cursor_style:
+        if self.styleless or line.default.style == self.cursor_style:
             pop = line.pop
             non_empty_x = sorted(line)
             begin = bisect_left(non_empty_x, self.cursor_x)
@@ -1568,7 +1568,7 @@ class Screen:
 
         # If the line's default char is equivalent to our cursor, overwriting
         # a char in the line is equivalent to delete it if from the line
-        if line.default.style == self.cursor_style:
+        if self.styleless or line.default.style == self.cursor_style:
             pop = line.pop
             non_empty_x = sorted(line)
             begin = bisect_left(non_empty_x, low)
@@ -1626,7 +1626,8 @@ class Screen:
         # if we were requested to clear the whole screen and
         # the cursor's attrs are the same than the screen's default
         # then this is equivalent to delete all the lines from the buffer
-        if (how == 2 or how == 3) and self.default_style == self.cursor_style:
+        if (how == 2 or how == 3
+            ) and (self.styleless or self.default_style == self.cursor_style):
             buffer.clear()
             return
 
@@ -1635,7 +1636,7 @@ class Screen:
         # (screen.default_char).
         # If a deleted line is then requested, a new line will
         # be added with screen.default_char as its default char
-        if self.default_style == self.cursor_style:
+        if self.styleless or self.default_style == self.cursor_style:
             pop = buffer.pop
             non_empty_y = sorted(buffer)
             begin = bisect_left(non_empty_y, top)  # inclusive
