@@ -52,8 +52,8 @@ Margins = namedtuple("Margins", "top bottom")
 #: A container for savepoint, created on :data:`~termscraper.escape.DECSC`.
 Savepoint = namedtuple(
     "Savepoint", [
-        "cursor_x", "cursor_y", "cursor", "g0_charset", "g1_charset",
-        "charset", "origin", "wrap"
+        "cursor_x", "cursor_y", "cursor", "cursor_hidden", "g0_charset",
+        "g1_charset", "charset", "origin", "wrap"
     ]
 )
 
@@ -379,11 +379,10 @@ class Cursor:
         :meth:`~termscraper.screens.Screen.select_graphic_rendition`
         for details).
     """
-    __slots__ = ("attrs", "hidden")
+    __slots__ = ("attrs", )
 
     def __init__(self, attrs):
         self.attrs = attrs
-        self.hidden = False
 
 
 class Line(dict):
@@ -642,6 +641,10 @@ class Screen:
 
        Cursor y coordinate (row number, 0-indexed).
 
+    .. attribute:: cursor_hidden
+
+       Flag if the cursor is hidden or not.
+
     .. attribute:: margins
 
        Margins determine which screen lines move during scrolling
@@ -881,6 +884,7 @@ class Screen:
 
         self.cursor = Cursor(self.default_char.copy())
         self.cursor_x, self.cursor_y = 0, 0
+        self.cursor_hidden = False
         self.cursor_position()
 
         self.saved_columns = None
@@ -1002,7 +1006,7 @@ class Screen:
 
         # Make the cursor visible.
         if mo.DECTCEM in modes:
-            self.cursor.hidden = False
+            self.cursor_hidden = False
 
     def reset_mode(self, *modes, **kwargs):
         """Reset (disable) a given list of modes.
@@ -1040,7 +1044,7 @@ class Screen:
 
         # Hide the cursor.
         if mo.DECTCEM in modes:
-            self.cursor.hidden = True
+            self.cursor_hidden = True
 
     def define_charset(self, code, mode):
         """Define ``G0`` or ``G1`` charset.
@@ -1310,8 +1314,8 @@ class Screen:
         self.savepoints.append(
             Savepoint(
                 self.cursor_x, self.cursor_y, copy.deepcopy(self.cursor),
-                self.g0_charset, self.g1_charset, self.charset, mo.DECOM
-                in self.mode, mo.DECAWM in self.mode
+                self.cursor_hidden, self.g0_charset, self.g1_charset,
+                self.charset, mo.DECOM in self.mode, mo.DECAWM in self.mode
             )
         )
 
@@ -1334,6 +1338,7 @@ class Screen:
             self.cursor = savepoint.cursor
             self.cursor_x = savepoint.cursor_x
             self.cursor_y = savepoint.cursor_y
+            self.cursor_hidden = savepoint.cursor_hidden
             self.ensure_hbounds()
             self.ensure_vbounds(use_margins=True)
         else:
@@ -2051,7 +2056,7 @@ class HistoryScreen(Screen):
 
         # If we're at the bottom of the history buffer and `DECTCEM`
         # mode is set -- show the cursor.
-        self.cursor.hidden = not (
+        self.cursor_hidden = not (
             self.history.position == self.history.size
             and mo.DECTCEM in self.mode
         )

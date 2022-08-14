@@ -324,11 +324,11 @@ def test_set_mode():
 
     # Test mo.DECTCEM mode
     screen = update(termscraper.Screen(3, 3), ["sam", "is ", "foo"])
-    screen.cursor.hidden = True
+    screen.cursor_hidden = True
     screen.set_mode(mo.DECTCEM)
-    assert not screen.cursor.hidden
+    assert not screen.cursor_hidden
     screen.reset_mode(mo.DECTCEM)
-    assert screen.cursor.hidden
+    assert screen.cursor_hidden
 
 
 def test_draw():
@@ -2250,15 +2250,15 @@ def test_hide_cursor():
 
     # DECTCEM is set by default.
     assert mo.DECTCEM in screen.mode
-    assert not screen.cursor.hidden
+    assert not screen.cursor_hidden
 
     # a) resetting DECTCEM hides the cursor.
     screen.reset_mode(mo.DECTCEM)
-    assert screen.cursor.hidden
+    assert screen.cursor_hidden
 
     # b) ... and it's back!
     screen.set_mode(mo.DECTCEM)
-    assert not screen.cursor.hidden
+    assert not screen.cursor_hidden
 
 
 def test_report_device_attributes():

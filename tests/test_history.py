@@ -760,16 +760,16 @@ def test_cursor_is_hidden(monkeypatch):
     for idx in range(screen.lines * 5):
         stream.feed(str(idx) + os.linesep)
 
-    assert not screen.cursor.hidden
+    assert not screen.cursor_hidden
 
     stream.feed(ctrl.ESC + "P")
-    assert screen.cursor.hidden
+    assert screen.cursor_hidden
     stream.feed(ctrl.ESC + "P")
-    assert screen.cursor.hidden
+    assert screen.cursor_hidden
     stream.feed(ctrl.ESC + "N")
-    assert screen.cursor.hidden
+    assert screen.cursor_hidden
     stream.feed(ctrl.ESC + "N")
-    assert not screen.cursor.hidden
+    assert not screen.cursor_hidden
 
 
 def test_erase_in_display():
