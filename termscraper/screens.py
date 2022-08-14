@@ -52,7 +52,7 @@ Margins = namedtuple("Margins", "top bottom")
 #: A container for savepoint, created on :data:`~termscraper.escape.DECSC`.
 Savepoint = namedtuple(
     "Savepoint", [
-        "cursor_x", "cursor_y", "cursor", "cursor_hidden", "g0_charset",
+        "cursor_x", "cursor_y", "cursor_char", "cursor_hidden", "g0_charset",
         "g1_charset", "charset", "origin", "wrap"
     ]
 )
@@ -372,19 +372,6 @@ class Char:
         return r
 
 
-class Cursor:
-    """Screen cursor.
-
-    :param termscraper.screens.Char attrs: cursor attributes (see
-        :meth:`~termscraper.screens.Screen.select_graphic_rendition`
-        for details).
-    """
-    __slots__ = ("attrs", )
-
-    def __init__(self, attrs):
-        self.attrs = attrs
-
-
 class Line(dict):
     """A line or row of the screen.
 
@@ -628,10 +615,12 @@ class Screen:
 
        .. versionadded:: 0.7.0
 
-    .. attribute:: cursor
+    .. attribute:: cursor_char
 
-       Reference to the :class:`~termscraper.screens.Cursor` object, holding
-       cursor attributes.
+       Reference to the :class:`~termscraper.screens.Char` object, holding
+       cursor attributes/style and character. See
+       :meth:`~termscraper.screens.Screen.select_graphic_rendition`
+       for details.
 
     .. attribute:: cursor_x
 
@@ -882,7 +871,7 @@ class Screen:
         # we aim to support VT102 / VT220 and linux -- we use n = 8.
         self.tabstops = set(range(8, self.columns, 8))
 
-        self.cursor = Cursor(self.default_char.copy())
+        self.cursor_char = self.default_char.copy()
         self.cursor_x, self.cursor_y = 0, 0
         self.cursor_hidden = False
         self.cursor_position()
@@ -1091,11 +1080,9 @@ class Screen:
         # These attributes are expected to be constant across all the
         # execution of self.draw()
         columns = self.columns
-        cursor = self.cursor
         buffer = self._buffer
-        attrs = cursor.attrs
         mode = self.mode
-        style = attrs.style
+        style = self.cursor_char.style
 
         # Note: checking for IRM here makes sense because it would be
         # checked on every char in data otherwise.
@@ -1313,7 +1300,7 @@ class Screen:
         """Push the current cursor position onto the stack."""
         self.savepoints.append(
             Savepoint(
-                self.cursor_x, self.cursor_y, copy.deepcopy(self.cursor),
+                self.cursor_x, self.cursor_y, copy.deepcopy(self.cursor_char),
                 self.cursor_hidden, self.g0_charset, self.g1_charset,
                 self.charset, mo.DECOM in self.mode, mo.DECAWM in self.mode
             )
@@ -1335,7 +1322,7 @@ class Screen:
             if savepoint.wrap:
                 self.set_mode(mo.DECAWM)
 
-            self.cursor = savepoint.cursor
+            self.cursor_char = savepoint.cursor_char
             self.cursor_x = savepoint.cursor_x
             self.cursor_y = savepoint.cursor_y
             self.cursor_hidden = savepoint.cursor_hidden
@@ -1516,7 +1503,7 @@ class Screen:
 
         # If the line's default char is equivalent to our cursor, overwriting
         # a char in the line is equivalent to delete it if from the line
-        if line.default == self.cursor.attrs:
+        if line.default == self.cursor_char:
             pop = line.pop
             non_empty_x = sorted(line)
             begin = bisect_left(non_empty_x, self.cursor_x)
@@ -1530,8 +1517,8 @@ class Screen:
 
         else:
             write_data = line.write_data
-            data = self.cursor.attrs.data
-            style = self.cursor.attrs.style
+            data = self.cursor_char.data
+            style = self.cursor_char.style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
             for x in range(
@@ -1566,7 +1553,7 @@ class Screen:
 
         # If the line's default char is equivalent to our cursor, overwriting
         # a char in the line is equivalent to delete it if from the line
-        if line.default == self.cursor.attrs:
+        if line.default == self.cursor_char:
             pop = line.pop
             non_empty_x = sorted(line)
             begin = bisect_left(non_empty_x, low)
@@ -1580,8 +1567,8 @@ class Screen:
 
         else:
             write_data = line.write_data
-            data = self.cursor.attrs.data
-            style = self.cursor.attrs.style
+            data = self.cursor_char.data
+            style = self.cursor_char.style
             # a full range scan is required and not a sparse scan
             # because we were asked to *write* on that full range
             for x in range(low, high):
@@ -1624,7 +1611,7 @@ class Screen:
         # if we were requested to clear the whole screen and
         # the cursor's attrs are the same than the screen's default
         # then this is equivalent to delete all the lines from the buffer
-        if (how == 2 or how == 3) and self.default_char == self.cursor.attrs:
+        if (how == 2 or how == 3) and self.default_char == self.cursor_char:
             buffer.clear()
             return
 
@@ -1633,7 +1620,7 @@ class Screen:
         # (screen.default_char).
         # If a deleted line is then requested, a new line will
         # be added with screen.default_char as its default char
-        if self.default_char == self.cursor.attrs:
+        if self.default_char == self.cursor_char:
             pop = buffer.pop
             non_empty_y = sorted(buffer)
             begin = bisect_left(non_empty_y, top)  # inclusive
@@ -1642,8 +1629,8 @@ class Screen:
             list(map(pop, non_empty_y[begin:end]))
 
         else:
-            data = self.cursor.attrs.data
-            style = self.cursor.attrs.style
+            data = self.cursor_char.data
+            style = self.cursor_char.style
             for y in range(top, bottom):
                 line = buffer.line_at(y)
                 write_data = line.write_data
@@ -1833,7 +1820,7 @@ class Screen:
 
         # Fast path for resetting all attributes.
         if not attrs or attrs == (0, ) or self.disabled_display_graphic:
-            self.cursor.attrs = self.default_char
+            self.cursor_char = self.default_char
             return
         else:
             attrs = list(reversed(attrs))
@@ -1871,7 +1858,7 @@ class Screen:
                 except IndexError:
                     pass
 
-        self.cursor.attrs.style = self.cursor.attrs.style._replace(**replace)
+        self.cursor_char.style = self.cursor_char.style._replace(**replace)
 
     def report_device_attributes(self, mode=0, **kwargs):
         """Report terminal identity.

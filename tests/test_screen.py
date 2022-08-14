@@ -65,7 +65,7 @@ def test_remove_non_existant_attribute():
 
     screen.select_graphic_rendition(24)  # underline-off.
     assert tolist(screen) == [[screen.default_char, screen.default_char]] * 2
-    assert not screen.cursor.attrs.underscore
+    assert not screen.cursor_char.underscore
 
 
 def test_attributes():
@@ -75,7 +75,7 @@ def test_attributes():
 
     # Still default, since we haven't written anything.
     assert tolist(screen) == [[screen.default_char, screen.default_char]] * 2
-    assert screen.cursor.attrs.bold
+    assert screen.cursor_char.bold
 
     screen.draw("f")
     assert tolist(screen) == [
@@ -101,12 +101,12 @@ def test_colors():
 
     screen.select_graphic_rendition(30)
     screen.select_graphic_rendition(40)
-    assert screen.cursor.attrs.fg == "black"
-    assert screen.cursor.attrs.bg == "black"
+    assert screen.cursor_char.fg == "black"
+    assert screen.cursor_char.bg == "black"
 
     screen.select_graphic_rendition(31)
-    assert screen.cursor.attrs.fg == "red"
-    assert screen.cursor.attrs.bg == "black"
+    assert screen.cursor_char.fg == "red"
+    assert screen.cursor_char.bg == "black"
 
 
 def test_colors256():
@@ -115,8 +115,8 @@ def test_colors256():
     # a) OK-case.
     screen.select_graphic_rendition(g.FG_256, 5, 0)
     screen.select_graphic_rendition(g.BG_256, 5, 15)
-    assert screen.cursor.attrs.fg == "000000"
-    assert screen.cursor.attrs.bg == "ffffff"
+    assert screen.cursor_char.fg == "000000"
+    assert screen.cursor_char.bg == "ffffff"
 
     # b) invalid color.
     screen.select_graphic_rendition(48, 5, 100500)
@@ -127,7 +127,7 @@ def test_colors256_missing_attrs():
     screen = termscraper.Screen(2, 2)
     screen.select_graphic_rendition(g.FG_256)
     screen.select_graphic_rendition(g.BG_256)
-    assert screen.cursor.attrs == screen.default_char
+    assert screen.cursor_char == screen.default_char
 
 
 def test_colors24bit():
@@ -136,8 +136,8 @@ def test_colors24bit():
     # a) OK-case
     screen.select_graphic_rendition(38, 2, 0, 0, 0)
     screen.select_graphic_rendition(48, 2, 255, 255, 255)
-    assert screen.cursor.attrs.fg == "000000"
-    assert screen.cursor.attrs.bg == "ffffff"
+    assert screen.cursor_char.fg == "000000"
+    assert screen.cursor_char.bg == "ffffff"
 
     # b) invalid color.
     screen.select_graphic_rendition(48, 2, 255)
@@ -149,25 +149,25 @@ def test_colors_aixterm():
 
     # a) foreground color.
     screen.select_graphic_rendition(94)
-    assert screen.cursor.attrs.fg == "brightblue"
+    assert screen.cursor_char.fg == "brightblue"
 
     # b) background color.
     screen.select_graphic_rendition(104)
-    assert screen.cursor.attrs.bg == "brightblue"
+    assert screen.cursor_char.bg == "brightblue"
 
 
 def test_colors_ignore_invalid():
     screen = termscraper.Screen(2, 2)
-    default_attrs = screen.cursor.attrs
+    default_attrs = screen.cursor_char
 
     screen.select_graphic_rendition(100500)
-    assert screen.cursor.attrs == default_attrs
+    assert screen.cursor_char == default_attrs
 
     screen.select_graphic_rendition(38, 100500)
-    assert screen.cursor.attrs == default_attrs
+    assert screen.cursor_char == default_attrs
 
     screen.select_graphic_rendition(48, 100500)
-    assert screen.cursor.attrs == default_attrs
+    assert screen.cursor_char == default_attrs
 
 
 def test_reset_resets_colors():
@@ -176,11 +176,11 @@ def test_reset_resets_colors():
 
     screen.select_graphic_rendition(30)
     screen.select_graphic_rendition(40)
-    assert screen.cursor.attrs.fg == "black"
-    assert screen.cursor.attrs.bg == "black"
+    assert screen.cursor_char.fg == "black"
+    assert screen.cursor_char.bg == "black"
 
     screen.select_graphic_rendition(0)
-    assert screen.cursor.attrs == screen.default_char
+    assert screen.cursor_char == screen.default_char
 
 
 def test_reset_works_between_attributes():
@@ -189,8 +189,8 @@ def test_reset_works_between_attributes():
 
     # Red fg, reset, red bg
     screen.select_graphic_rendition(31, 0, 41)
-    assert screen.cursor.attrs.fg == "default"
-    assert screen.cursor.attrs.bg == "red"
+    assert screen.cursor_char.fg == "default"
+    assert screen.cursor_char.bg == "red"
 
 
 def test_multi_attribs():
@@ -199,8 +199,8 @@ def test_multi_attribs():
     screen.select_graphic_rendition(1)
     screen.select_graphic_rendition(3)
 
-    assert screen.cursor.attrs.bold
-    assert screen.cursor.attrs.italics
+    assert screen.cursor_char.bold
+    assert screen.cursor_char.italics
 
 
 def test_attributes_reset():
@@ -1035,12 +1035,12 @@ def test_save_cursor():
     screen.save_cursor()
     screen.select_graphic_rendition(24)
 
-    assert screen.cursor.attrs == screen.default_char
+    assert screen.cursor_char == screen.default_char
 
     screen.restore_cursor()
 
-    assert screen.cursor.attrs != screen.default_char
-    assert screen.cursor.attrs == Char(" ", underscore=True)
+    assert screen.cursor_char != screen.default_char
+    assert screen.cursor_char == Char(" ", underscore=True)
     consistency_asserts(screen)
 
 
