@@ -46,7 +46,7 @@ def setup(path, screen_cls, columns, lines, optimize_conf):
     if optimize_conf:
         extra_args = {
                 'track_dirty_lines': False,
-                'disable_display_graphic': True,
+                'styleless': True,
                 }
 
     screen = screen_cls(columns, lines, **extra_args)
