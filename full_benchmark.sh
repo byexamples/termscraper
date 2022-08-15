@@ -19,7 +19,7 @@ fi
 outputfile=$1
 
 if [ ! -f benchmark.py ]; then
-    echo "File benchmark.py missing. Are you in the home folder of pyte project?"
+    echo "File benchmark.py missing. Are you in the home folder of termscraper project?"
     exit 1
 fi
 
