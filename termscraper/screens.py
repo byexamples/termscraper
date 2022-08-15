@@ -434,7 +434,7 @@ class Line(dict):
             occupancy=len(self) / screen.columns,
             min=min(self) if self else None,
             max=max(self) if self else None,
-            span=(max(self) - min(self)) if self else None
+            span=(max(self) + 1 - min(self)) if self else None
         )
 
 
@@ -769,7 +769,7 @@ class Screen:
             occupancy=len(buffer) / self.lines,
             min=min(buffer) if buffer else None,
             max=max(buffer) if buffer else None,
-            span=(max(buffer) - min(buffer)) if buffer else None,
+            span=(max(buffer) + 1 - min(buffer)) if buffer else None,
             line_stats=[
                 (x, line.stats(self)) for x, line in sorted(buffer.items())
             ]
