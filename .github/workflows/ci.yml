@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "pypy-3.7"]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "pypy-3.7", "3.10"]
 
     steps:
       - uses: "actions/checkout@v2"
@@ -30,8 +30,8 @@ jobs:
           set -xe
           python -VV
           python setup.py sdist
-          pip wheel --verbose --no-deps --no-clean dist/pyte*.tar.gz
-          pip install pyte*.whl
+          pip wheel --verbose --no-deps --no-clean dist/termscraper*.tar.gz
+          pip install termscraper*.whl
         shell: bash
       - name: "Run tests"
         run: |
@@ -40,4 +40,5 @@ jobs:
           pushd tests
           python -m pytest -vv --pyargs .
           popd
+          make byexample-tests
         shell: bash
