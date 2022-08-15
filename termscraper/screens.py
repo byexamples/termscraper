@@ -617,6 +617,9 @@ class Screen:
 
        .. versionadded:: 0.7.0
 
+    The following are a list of private attributes and they should be considered
+    unstable (they may change between versions of termscraper).
+
     .. attribute:: cursor_style
 
        Reference to the :class:`~termscraper.screens.CharStyle` object, holding
