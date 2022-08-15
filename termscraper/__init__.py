@@ -34,6 +34,8 @@ import io
 from .screens import Screen, DiffScreen, HistoryScreen, DebugScreen
 from .streams import Stream, ByteStream
 
+from .version import __version__
+
 if __debug__:
 
     def dis(chars):
