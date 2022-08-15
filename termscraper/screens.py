@@ -457,13 +457,13 @@ class Buffer(dict):
         Return the line at the given position y. If no line exists,
         create a new one and add it to the buffer before returning it.
 
-        This is a shortcut of `buffer.setdefault(y, screen.default_line())`
+        This is a shortcut of `buffer.setdefault(y, screen.new_empty_line())`
         but avoids the copy if the line already exists.
         """
         try:
             return self[y]
         except KeyError:
-            self[y] = line = self._screen.default_line()
+            self[y] = line = self._screen.new_empty_line()
             return line
 
 
@@ -695,7 +695,7 @@ class Screen:
         self.default_char = ref
         self.default_style = ref.style
 
-    def default_line(self):
+    def new_empty_line(self):
         return Line(self.new_empty_char())
 
     def new_empty_char(self):
