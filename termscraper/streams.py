@@ -25,9 +25,32 @@ import codecs
 import itertools
 import re
 import warnings
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 from . import control as ctrl, escape as esc
+
+
+class StreamStats(namedtuple("_StreamStats", [
+    "cb_counters",
+])):
+    def __repr__(self):
+        ret = []
+        # get names and numbers
+        counts = ((t[0].__name__, t[1]) for t in self.cb_counters.items())
+
+        # sort by most called callback
+        counts = sorted(counts, key=lambda t: (t[1], t[0]), reverse=True)
+
+        # print
+        total = sum(t[1] for t in counts)
+        for cb_name, cnt in counts:
+            ret.append(
+                "{0: >5} ({1:.2f}): {2}".format(cnt, cnt / total, cb_name)
+            )
+
+        ret.append(f"Total callback count: {total}")
+
+        return '\n'.join(ret)
 
 
 class Stream:
@@ -138,13 +161,19 @@ class Stream:
     _text_pattern = re.compile("[^" + "".join(map(re.escape, _special)) + "]+")
     del _special
 
-    def __init__(self, screen=None, strict=True):
+    def __init__(self, screen=None, strict=True, trace_callbacks=False):
         self.listener = None
         self.strict = strict
         self.use_utf8 = True
 
+        self.trace_callbacks = trace_callbacks
+        self.callback_counters = defaultdict(int)
+
         if screen is not None:
             self.attach(screen)
+
+    def stats(self):
+        return StreamStats(cb_counters=dict(self.callback_counters))
 
     def attach(self, screen):
         """Attach the given screen to the stream: events generated
@@ -233,14 +262,33 @@ class Stream:
         )
         OSC_TERMINATORS = set([ctrl.ST_C0, ctrl.ST_C1, ctrl.BEL])
 
+        callback_counters = self.callback_counters
+
+        def callback_tracer(func):
+            def decorated(*args, **kargs):
+                callback_counters[func] += 1
+
+                return func(*args, **kargs)
+
+            return decorated
+
         def create_dispatcher(mapping):
-            return defaultdict(
-                lambda: debug,
-                dict(
-                    (event, getattr(listener, attr))
-                    for event, attr in mapping.items()
+            if self.trace_callbacks:
+                return defaultdict(
+                    lambda: callback_tracer(debug),
+                    dict(
+                        (event, callback_tracer(getattr(listener, attr)))
+                        for event, attr in mapping.items()
+                    )
                 )
-            )
+            else:
+                return defaultdict(
+                    lambda: debug,
+                    dict(
+                        (event, getattr(listener, attr))
+                        for event, attr in mapping.items()
+                    )
+                )
 
         basic_dispatch = create_dispatcher(basic)
         sharp_dispatch = create_dispatcher(self.sharp)
