@@ -147,17 +147,14 @@ class Stream:
             self.attach(screen)
 
     def attach(self, screen):
-        """Adds a given screen to the listener queue.
+        """Attach the given screen to the stream: events generated
+        by the stream will be delivered to the screen.
+
+        If the stream already has an attached screen, the latter one
+        will replace the former.
 
         :param termscraper.screens.Screen screen: a screen to attach to.
         """
-        if self.listener is not None:
-            warnings.warn(
-                "As of version 0.6.0 the listener queue is "
-                "restricted to a single element. Existing "
-                "listener {0} will be replaced.".format(self.listener),
-                DeprecationWarning
-            )
 
         if self.strict:
             for event in self.events:
@@ -168,14 +165,9 @@ class Stream:
         self._parser = None
         self._initialize_parser()
 
-    def detach(self, screen):
-        """Remove a given screen from the listener queue and fails
-        silently if it's not attached.
-
-        :param termscraper.screens.Screen screen: a screen to detach.
-        """
-        if screen is self.listener:
-            self.listener = None
+    def detach(self):
+        """Remove the attached screen. Do nothing if there is no such."""
+        self.listener = None
 
     def feed(self, data):
         """Consume some data and advances the state as necessary.

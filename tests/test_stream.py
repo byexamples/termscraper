@@ -220,7 +220,10 @@ def test_compatibility_api():
     stream.feed("привет")
 
     # c) detaching an attached screen.
-    stream.detach(screen)
+    stream.detach()
+
+    # d) double detach
+    stream.detach()
 
 
 def test_define_charset():
