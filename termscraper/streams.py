@@ -30,9 +30,7 @@ from collections import defaultdict, namedtuple
 from . import control as ctrl, escape as esc
 
 
-class StreamStats(namedtuple("_StreamStats", [
-    "cb_counters",
-])):
+class StreamStats(namedtuple("_StreamStats", ["cb_counters", "input_length"])):
     def __repr__(self):
         ret = []
         # get names and numbers
@@ -48,7 +46,10 @@ class StreamStats(namedtuple("_StreamStats", [
                 "{0: >5} ({1:.2f}): {2}".format(cnt, cnt / total, cb_name)
             )
 
-        ret.append(f"Total callback count: {total}")
+        ret.append(f"Input length consumed: {self.input_length}")
+        ret.append(
+            f"Total callback count: {total} (ratio callback/input: {total/self.input_length:.4f})"
+        )
 
         return '\n'.join(ret)
 
@@ -168,12 +169,16 @@ class Stream:
 
         self.trace_callbacks = trace_callbacks
         self.callback_counters = defaultdict(int)
+        self.input_length = 0
 
         if screen is not None:
             self.attach(screen)
 
     def stats(self):
-        return StreamStats(cb_counters=dict(self.callback_counters))
+        return StreamStats(
+            cb_counters=dict(self.callback_counters),
+            input_length=self.input_length
+        )
 
     def attach(self, screen):
         """Attach the given screen to the stream: events generated
@@ -209,6 +214,7 @@ class Stream:
         taking_plain_text = self._taking_plain_text
 
         length = len(data)
+        self.input_length += length
         offset = 0
         while offset < length:
             if taking_plain_text:
