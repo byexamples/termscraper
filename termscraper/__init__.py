@@ -33,19 +33,20 @@ from .streams import Stream, ByteStream
 
 from .version import __version__
 
-if __debug__:
 
-    def dis(chars):
-        """A :func:`dis.dis` for terminals.
+def dis(chars):
+    """A :func:`dis.dis` for terminals.
 
-        >>> dis(b"\x07")       # doctest: +NORMALIZE_WHITESPACE
-        ["bell", [], {}]
-        >>> dis(b"\x1b[20m")   # doctest: +NORMALIZE_WHITESPACE
-        ["select_graphic_rendition", [20], {}]
-        """
-        if isinstance(chars, str):
-            chars = chars.encode("utf-8")
+    >>> from termscraper import dis
+    >>> dis(b"\x07")       # byexample: +norm-ws
+    ["bell", [], {}]
 
-        with io.StringIO() as buf:
-            ByteStream(DebugScreen(to=buf)).feed(chars)
-            print(buf.getvalue())
+    >>> dis(b"\x1b[20m")   # byexample: +norm-ws
+    ["select_graphic_rendition", [20], {}]
+    """
+    if isinstance(chars, str):
+        chars = chars.encode("utf-8")
+
+    with io.StringIO() as buf:
+        ByteStream(DebugScreen(to=buf)).feed(chars)
+        print(buf.getvalue())

@@ -11,6 +11,7 @@ deps-dev: deps
 	pip install -r requirements-dev.txt
 
 test:
+	byexample -l python termscraper/*.py
 	cd tests ; python -m pytest .
 
 version-test:

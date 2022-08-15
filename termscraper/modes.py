@@ -13,6 +13,7 @@
     distinguishable from the former ones; for example `Origin Mode`
     -- :data:`DECOM` is ``192`` not ``6``.
 
+    >>> from termscraper.modes import *
     >>> DECOM
     192
 

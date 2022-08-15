@@ -608,7 +608,8 @@ class Screen:
        A set of line numbers, which should be re-drawn. The user is responsible
        for clearing this set when changes have been applied.
 
-       >>> screen = Screen(80, 24)
+       >>> from termscraper import Screen
+       >>> screen = Screen(80, 24, track_dirty_lines=True)
        >>> screen.dirty.clear()
        >>> screen.draw("!")
        >>> list(screen.dirty)
@@ -2245,12 +2246,14 @@ class DebugScreen:
     r"""A screen which dumps a subset of the received events to a file.
 
     >>> import io
+    >>> from termscraper import DebugScreen, Stream
+
     >>> with io.StringIO() as buf:
     ...     stream = Stream(DebugScreen(to=buf))
     ...     stream.feed("\x1b[1;24r\x1b[4l\x1b[24;1H\x1b[0;10m")
     ...     print(buf.getvalue())
     ...
-    ... # doctest: +NORMALIZE_WHITESPACE
+    ... # byexample: +norm-ws
     ["set_margins", [1, 24], {}]
     ["reset_mode", [4], {}]
     ["cursor_position", [24, 1], {}]

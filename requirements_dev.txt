@@ -2,3 +2,4 @@ pytest
 pyperf >= 2.3.0
 wcwidth
 wheel
+byexample
