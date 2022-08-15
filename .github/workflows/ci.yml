@@ -40,5 +40,5 @@ jobs:
           pushd tests
           python -m pytest -vv --pyargs .
           popd
-          make byexample-tests
+          make byexample
         shell: bash
