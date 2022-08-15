@@ -8,9 +8,6 @@
     * :class:`~termscraper.screens.Screen` -- base screen implementation,
       which handles all the core escape sequences, recognized by
       :class:`~termscraper.streams.Stream`.
-    * If you need a screen to keep track of the changed lines
-      (which you probably do need) -- use
-      :class:`~termscraper.screens.DiffScreen`.
     * If you also want a screen to collect history and allow
       pagination -- :class:`termscraper.screen.HistoryScreen` is here
       for ya ;)
@@ -1928,28 +1925,6 @@ class Screen:
 
         By default is a noop.
         """
-
-
-class DiffScreen(Screen):
-    """
-    A screen subclass, which maintains a set of dirty lines in its
-    :attr:`dirty` attribute. The end user is responsible for emptying
-    a set, when a diff is applied.
-
-    .. deprecated:: 0.7.0
-
-       The functionality contained in this class has been merged into
-       :class:`~termscraper.screens.Screen` and will be removed in 0.8.0.
-       Please update your code accordingly.
-    """
-    def __init__(self, *args, **kwargs):
-        warnings.warn(
-            "The functionality of ``DiffScreen` has been merged into "
-            "``Screen`` and will be removed in 0.8.0. Please update "
-            "your code accordingly.", DeprecationWarning
-        )
-
-        super(DiffScreen, self).__init__(*args, **kwargs)
 
 
 History = namedtuple("History", "top bottom ratio size position")

@@ -24,14 +24,11 @@
     :license: LGPL, see LICENSE for more details.
 """
 
-__all__ = (
-    "Screen", "DiffScreen", "HistoryScreen", "DebugScreen", "Stream",
-    "ByteStream"
-)
+__all__ = ("Screen", "HistoryScreen", "DebugScreen", "Stream", "ByteStream")
 
 import io
 
-from .screens import Screen, DiffScreen, HistoryScreen, DebugScreen
+from .screens import Screen, HistoryScreen, DebugScreen
 from .streams import Stream, ByteStream
 
 from .version import __version__

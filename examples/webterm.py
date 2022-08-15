@@ -6,7 +6,7 @@
     single-user web terminal.
 
     Client-side ``webterm.js`` supports
-    * incremental rendering via :data:`~termscraper.screens.DiffScreen.dirty`,
+    * incremental rendering via :data:`~termscraper.screens.Screen.dirty`,
     * most of the common keyboard events,
     * pagination on Meta + P/Meta + A.
 
