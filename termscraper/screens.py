@@ -67,6 +67,11 @@ CharStyle = namedtuple(
     ]
 )
 
+Cursor = namedtuple("Cursor", [
+    "x",
+    "y",
+])
+
 
 class LineStats(
     namedtuple(
@@ -1805,6 +1810,10 @@ class Screen:
             # region?
 
         self.ensure_vbounds()
+
+    @property
+    def cursor(self):
+        return Cursor(self.cursor_x, self.cursor_y)
 
     def bell(self, *args):
         """Bell stub -- the actual implementation should probably be
