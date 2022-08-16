@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     print("Terminal input:", os.path.basename(benchmark))
     print("Stream stats:")
-    print(stream.stats())
+    print(stream.stats(reset=True))
     print()
 
     print("Screen stats:")

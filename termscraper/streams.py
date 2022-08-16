@@ -174,11 +174,17 @@ class Stream:
         if screen is not None:
             self.attach(screen)
 
-    def stats(self):
-        return StreamStats(
+    def stats(self, reset=False):
+        st = StreamStats(
             cb_counters=dict(self.callback_counters),
             input_length=self.input_length
         )
+
+        if reset:
+            self.input_length = 0
+            self.callback_counters.clear()
+
+        return st
 
     def attach(self, screen):
         """Attach the given screen to the stream: events generated
