@@ -1,4 +1,4 @@
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 
 _author = 'Di Paola Martin'
 _license = 'GNU LGPLv3'
