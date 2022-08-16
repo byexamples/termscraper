@@ -209,11 +209,8 @@ class BufferStats(
 
         if self.empty:
             return bstats + \
-                    "line entries: {0: >3}/{1} ({2:.2f}), falses: {3:> 3} ({4:.2f}), blanks: {5:> 3} ({6:.2f})\n{7}".format(
-                    self.entries, self.lines, self.occupancy,
-                    self.falses, self.falses/self.entries,
-                    self.blanks, self.blanks/self.entries,
-                    "\n".join("{0: >3}: {1}".format(x, stats) for x, stats in self.line_stats)
+                    "line entries: {0: >3}/{1} ({2:.2f})".format(
+                    self.entries, self.lines, self.occupancy
                     )
         else:
             return bstats + \
