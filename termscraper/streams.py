@@ -42,13 +42,18 @@ class StreamStats(namedtuple("_StreamStats", ["cb_counters", "input_length"])):
         # print
         total = sum(t[1] for t in counts)
         for cb_name, cnt in counts:
-            ret.append(
-                "{0: >5} ({1:.2f}): {2}".format(cnt, cnt / total, cb_name)
-            )
+            if cnt:
+                ret.append(
+                    "{0: >5} ({1:.2f}): {2}".format(cnt, cnt / total, cb_name)
+                )
+
+        ratio = '-'
+        if self.input_length:
+            ratio = f'{total/self.input_length:.4f}'
 
         ret.append(f"Input length consumed: {self.input_length}")
         ret.append(
-            f"Total callback count: {total} (ratio callback/input: {total/self.input_length:.4f})"
+            f"Total callback count: {total} (ratio callback/input: {ratio})"
         )
 
         return '\n'.join(ret)
