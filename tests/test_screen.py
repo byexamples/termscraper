@@ -442,8 +442,8 @@ def test_draw_multiple_chars():
 def test_draw_utf8():
     # See https://github.com/selectel/termscraper/issues/62
     screen = termscraper.Screen(1, 1)
-    stream = termscraper.ByteStream(screen)
-    stream.feed(b"\xE2\x80\x9D")
+    stream = termscraper.Stream(screen)
+    stream.feed_binary(b"\xE2\x80\x9D")
     assert screen.display == ["”"]
     consistency_asserts(screen)
 
@@ -529,12 +529,12 @@ def test_draw_width0_decawm_off():
 
 def test_draw_cp437():
     screen = termscraper.Screen(5, 1)
-    stream = termscraper.ByteStream(screen)
+    stream = termscraper.Stream(screen)
     assert screen.charset == 0
 
     screen.define_charset("U", "(")
     stream.select_other_charset("@")
-    stream.feed("α ± ε".encode("cp437"))
+    stream.feed_binary("α ± ε".encode("cp437"))
 
     assert screen.display == ["α ± ε"]
     consistency_asserts(screen)
@@ -2229,9 +2229,9 @@ def test_cursor_position():
 
 def test_unicode():
     screen = termscraper.Screen(4, 2)
-    stream = termscraper.ByteStream(screen)
+    stream = termscraper.Stream(screen)
 
-    stream.feed("тест".encode("utf-8"))
+    stream.feed_binary("тест".encode("utf-8"))
     assert screen.display == ["тест", "    "]
     consistency_asserts(screen)
 

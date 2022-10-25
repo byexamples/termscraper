@@ -264,8 +264,8 @@ def test_dollar_skip():
 ])
 def test_debug_stream(input, expected):
     output = io.StringIO()
-    stream = termscraper.ByteStream(termscraper.DebugScreen(to=output))
-    stream.feed(input)
+    stream = termscraper.Stream(termscraper.DebugScreen(to=output))
+    stream.feed_binary(input)
 
     output.seek(0)
     assert [eval(line) for line in output] == expected
@@ -295,20 +295,20 @@ def test_byte_stream_feed():
     screen = termscraper.Screen(20, 1)
     screen.draw = handler = argcheck()
 
-    stream = termscraper.ByteStream(screen)
-    stream.feed("Нерусский текст".encode("utf-8"))
+    stream = termscraper.Stream(screen)
+    stream.feed_binary("Нерусский текст".encode("utf-8"))
     assert handler.count == 1
     assert handler.args == ("Нерусский текст", )
 
 
 def test_byte_stream_define_charset_unknown():
     screen = termscraper.Screen(3, 3)
-    stream = termscraper.ByteStream(screen)
+    stream = termscraper.Stream(screen)
     stream.select_other_charset("@")
     default_g0_charset = screen.g0_charset
     # ``"Z"`` is not supported by Linux terminal, so expect a noop.
     assert "Z" not in cs.MAPS
-    stream.feed((ctrl.ESC + "(Z").encode())
+    stream.feed_binary((ctrl.ESC + "(Z").encode())
     assert screen.display[0] == " " * 3
     assert screen.g0_charset == default_g0_charset
     consistency_asserts(screen)
@@ -317,16 +317,16 @@ def test_byte_stream_define_charset_unknown():
 @pytest.mark.parametrize("charset,mapping", cs.MAPS.items())
 def test_byte_stream_define_charset(charset, mapping):
     screen = termscraper.Screen(3, 3)
-    stream = termscraper.ByteStream(screen)
+    stream = termscraper.Stream(screen)
     stream.select_other_charset("@")
-    stream.feed((ctrl.ESC + "(" + charset).encode())
+    stream.feed_binary((ctrl.ESC + "(" + charset).encode())
     assert screen.display[0] == " " * 3
     assert screen.g0_charset == mapping
     consistency_asserts(screen)
 
 
 def test_byte_stream_select_other_charset():
-    stream = termscraper.ByteStream(termscraper.Screen(3, 3))
+    stream = termscraper.Stream(termscraper.Screen(3, 3))
     assert stream.use_utf8  # on by default.
 
     # a) disable utf-8

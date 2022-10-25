@@ -20,5 +20,5 @@ blob = b"""\x1b[25d\x1b[0;10m\x1b[39;49m\x1b[37m\x1b[40m\x1b[23;15H\x1b[37m\x1b[
 
 
 if __name__ == "__main__":
-    stream = termscraper.ByteStream(termscraper.DebugScreen())
-    stream.feed(blob)
+    stream = termscraper.Stream(termscraper.DebugScreen())
+    stream.feed_binary(blob)

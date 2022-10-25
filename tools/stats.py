@@ -22,9 +22,9 @@ if __name__ == "__main__":
                 }
 
     screen = termscraper.Screen(columns, lines, **extra_args)
-    stream = termscraper.ByteStream(screen, trace_callbacks=True)
+    stream = termscraper.Stream(screen, trace_callbacks=True)
 
-    stream.feed(data)
+    stream.feed_binary(data)
 
     print("Terminal input:", os.path.basename(benchmark))
     print("Stream stats:")

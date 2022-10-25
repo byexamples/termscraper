@@ -69,9 +69,10 @@ class Stream:
 
     .. note::
 
-       Stream only accepts text as input, but if for some reason
-       you need to feed it with bytes, consider using
-       :class:`~termscraper.streams.ByteStream` instead.
+       For text input, use Stream.feed; for binary input
+       use Stream.feed_binary.
+       Don't change your mind however, do not mix calls to Stream.feed
+       and Stream.feed_binary.
 
     .. versionchanged 0.6.0::
 
@@ -171,6 +172,7 @@ class Stream:
         self.listener = None
         self.strict = strict
         self.use_utf8 = True
+        self.utf8_decoder = codecs.getincrementaldecoder("utf-8")("replace")
 
         self.trace_callbacks = trace_callbacks
         self.callback_counters = defaultdict(int)
@@ -240,6 +242,14 @@ class Stream:
                 offset += 1
 
         self._taking_plain_text = taking_plain_text
+
+    def feed_binary(self, data):
+        if self.use_utf8:
+            data = self.utf8_decoder.decode(data)
+        else:
+            data = "".join(map(chr, data))
+
+        return self.feed(data)
 
     def _send_to_parser(self, data):
         try:
@@ -452,36 +462,45 @@ class Stream:
            <http://ecma-international.org/publications/standards/Ecma-035.htm>`_
            for a description of VTXXX character set machinery.
         """
-        # A noop since all input is Unicode-only.
-
-
-class ByteStream(Stream):
-    """A stream which takes bytes as input.
-
-    Bytes are decoded to text using either UTF-8 (default) or the encoding
-    selected via :meth:`~termscraper.Stream.select_other_charset`.
-
-    .. attribute:: use_utf8
-
-       Assume the input to :meth:`~termscraper.streams.ByteStream.feed` is encoded
-       using UTF-8. Defaults to ``True``.
-    """
-    def __init__(self, *args, **kwargs):
-        super(ByteStream, self).__init__(*args, **kwargs)
-
-        self.utf8_decoder = codecs.getincrementaldecoder("utf-8")("replace")
-
-    def feed(self, data):
-        if self.use_utf8:
-            data = self.utf8_decoder.decode(data)
-        else:
-            data = "".join(map(chr, data))
-
-        super(ByteStream, self).feed(data)
-
-    def select_other_charset(self, code):
+        # only important if the user calls stream.feed_binary, otherwise
+        # it is a noop
         if code == "@":
             self.use_utf8 = False
             self.utf8_decoder.reset()
         elif code in "G8":
             self.use_utf8 = True
+
+
+class FilteredStream(Stream):
+    #: Control sequences, which don't require any arguments.
+    basic = {ev: "nop" for ev in Stream.basic}
+
+    #: non-CSI escape sequences.
+    escape = {ev: "nop" for ev in Stream.escape}
+
+    #: "sharp" escape sequences -- ``ESC # <N>``.
+    sharp = {ev: "nop" for ev in Stream.sharp}
+
+    #: CSI escape sequences -- ``CSI P1;P2;...;Pn <fn>``.
+    csi = {ev: "nop" for ev in Stream.csi}
+
+    #: A set of all events dispatched by the stream.
+    events = frozenset(
+        itertools.chain(
+            basic.values(),
+            escape.values(),
+            sharp.values(),
+            csi.values(),
+            ["define_charset"],
+            ["set_icon_name", "set_title"],  # OSC.
+            ["draw", "debug"]
+        )
+    )
+
+    #: A regular expression pattern matching everything what can be
+    #: considered plain text.
+    _special = set([ctrl.ESC, ctrl.CSI_C1, ctrl.NUL, ctrl.DEL, ctrl.OSC_C1])
+    _special.update(basic)
+    _special = _special - {ctrl.LF, ctrl.VT, ctrl.FF, ctrl.CR}
+    _text_pattern = re.compile("[^" + "".join(map(re.escape, _special)) + "]+")
+    del _special

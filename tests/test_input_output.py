@@ -22,8 +22,8 @@ def test_input_output(name):
         output = json.load(handle)
 
     screen = termscraper.Screen(80, 24)
-    stream = termscraper.ByteStream(screen)
-    stream.feed(input)
+    stream = termscraper.Stream(screen)
+    stream.feed_binary(input)
     assert screen.display == output
     consistency_asserts(screen)
 
@@ -38,8 +38,8 @@ def test_input_output_history(name):
         output = json.load(handle)
 
     screen = termscraper.HistoryScreen(80, 24, history=72)
-    stream = termscraper.ByteStream(screen)
-    stream.feed(input)
+    stream = termscraper.Stream(screen)
+    stream.feed_binary(input)
     screen.prev_page()
     screen.prev_page()
     screen.prev_page()

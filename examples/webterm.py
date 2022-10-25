@@ -46,11 +46,11 @@ class Terminal:
         self.screen.set_mode(termscraper.modes.LNM)
         self.screen.write_process_input = \
             lambda data: p_in.write(data.encode())
-        self.stream = termscraper.ByteStream()
+        self.stream = termscraper.Stream()
         self.stream.attach(self.screen)
 
     def feed(self, data):
-        self.stream.feed(data)
+        self.stream.feed_binary(data)
 
     def dumps(self):
         cursor = self.screen.cursor

@@ -26,7 +26,7 @@ if __name__ == "__main__":
         sys.exit("usage: %prog% command [args]")
 
     screen = termscraper.Screen(80, 24)
-    stream = termscraper.ByteStream(screen)
+    stream = termscraper.Stream(screen)
 
     p_pid, master_fd = pty.fork()
     if p_pid == 0:  # Child.
@@ -45,7 +45,7 @@ if __name__ == "__main__":
             if not data:
                 break
 
-            stream.feed(data)
+            stream.feed_binary(data)
 
     os.kill(p_pid, signal.SIGTERM)
     print(*screen.display, sep="\n")

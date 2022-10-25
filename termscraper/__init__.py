@@ -24,12 +24,14 @@
     :license: LGPL, see LICENSE for more details.
 """
 
-__all__ = ("Screen", "HistoryScreen", "DebugScreen", "Stream", "ByteStream")
+__all__ = (
+    "Screen", "HistoryScreen", "DebugScreen", "Stream", "FilteredStream"
+)
 
 import io
 
 from .screens import Screen, HistoryScreen, DebugScreen
-from .streams import Stream, ByteStream
+from .streams import Stream, FilteredStream
 
 from .version import __version__
 
@@ -48,5 +50,5 @@ def dis(chars):
         chars = chars.encode("utf-8")
 
     with io.StringIO() as buf:
-        ByteStream(DebugScreen(to=buf)).feed(chars)
+        Stream(DebugScreen(to=buf)).feed_binary(chars)
         print(buf.getvalue())
