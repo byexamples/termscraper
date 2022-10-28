@@ -27,6 +27,7 @@
 import collections
 import collections.abc
 import copy
+import pprint
 import json
 import math
 import os
@@ -2284,3 +2285,237 @@ class DebugScreen:
             return self.only_wrapper(attr)
         else:
             return lambda *args, **kwargs: None
+
+
+class LinearScreen:
+    def __init__(self):
+        self._chunks = []
+
+        self._char_cnt = 0
+        self._unhandled_escape_seq_cnt = collections.Counter()
+        self._ignored_escape_seq_cnt = collections.Counter()
+        self._emulated_escape_seq_cnt = collections.Counter()
+
+        self._total_char_cnt = 0
+        self._total_unhandled_escape_seq_cnt = collections.Counter()
+        self._total_ignored_escape_seq_cnt = collections.Counter()
+        self._total_emulated_escape_seq_cnt = collections.Counter()
+
+        self.reset()
+
+    def __repr__(self):
+        return ("{0}".format(self.__class__.__name__))
+
+    def stats(self, full=False):
+        char_cnt = self._total_char_cnt + self._char_cnt
+        emu_cnt = sum(self._total_emulated_escape_seq_cnt.values()
+                      ) + sum(self._emulated_escape_seq_cnt.values())
+        unh_cnt = sum(self._total_unhandled_escape_seq_cnt.values()
+                      ) + sum(self._unhandled_escape_seq_cnt.values())
+        ign_cnt = sum(self._total_ignored_escape_seq_cnt.values()
+                      ) + sum(self._ignored_escape_seq_cnt.values())
+
+        summary = f"Char: {char_cnt} ({self._char_cnt} new)\nEmulated sequences: {emu_cnt} ({sum(self._emulated_escape_seq_cnt.values())} new)\nIgnored sequences: {ign_cnt} ({sum(self._ignored_escape_seq_cnt.values())} new)\nUnhandled sequences: {unh_cnt} ({sum(self._unhandled_escape_seq_cnt.values())} new)"
+
+        if not full:
+            return summary
+
+        details = f"Emulated sequences (new):\n{pprint.pformat(self._emulated_escape_seq_cnt)}\n\nIgnored sequences (new):\n{pprint.pformat(self._ignored_escape_seq_cnt)}\n\nUnhandled sequences (new):\n{pprint.pformat(self._unhandled_escape_seq_cnt)}"
+        return summary + '\n\n' + details
+
+    @property
+    def current_text(self):
+        return ''.join(self._chunks)
+
+    @property
+    def were_unhandled_escape_sequences(self):
+        return sum(self._unhandled_escape_seq_cnt.values()) > 0
+
+    def reset_state(self):
+        self._chunks.clear()
+
+        self._total_char_cnt += self._char_cnt
+        self._total_unhandled_escape_seq_cnt.update(
+            self._unhandled_escape_seq_cnt
+        )
+        self._total_emulated_escape_seq_cnt.update(
+            self._emulated_escape_seq_cnt
+        )
+        self._total_ignored_escape_seq_cnt.update(self._ignored_escape_seq_cnt)
+
+        self._char_cnt = 0
+        self._unhandled_escape_seq_cnt.clear()
+        self._emulated_escape_seq_cnt.clear()
+        self._ignored_escape_seq_cnt.clear()
+
+    def draw(self, data):
+        data = data.translate(
+            self.g1_charset if self.charset else self.g0_charset
+        )
+
+        self._char_cnt += len(data)
+        self._chunks.append(data)
+
+    # Emulated escape sequences
+    def reset(self):
+        self._emulated_escape_seq_cnt.update(['reset'])
+        # If we have some text in our buffer, a reset should
+        # clear it but because we never delete data, we count
+        # this as an unhandled escape sequence too
+        if self.current_text:
+            self._unhandled_escape_seq_cnt.update(['reset'])
+
+        self.mode = set([mo.DECAWM, mo.DECTCEM])
+
+        self.charset = 0
+        self.g0_charset = cs.LAT1_MAP
+        self.g1_charset = cs.VT100_MAP
+
+    def set_mode(self, *modes, **kwargs):
+        self._emulated_escape_seq_cnt.update(['set_mode'])
+        self.mode.update(modes)
+
+    def reset_mode(self, *modes, **kwargs):
+        self._emulated_escape_seq_cnt.update(['reset_mode'])
+        self.mode.difference_update(modes)
+
+    def define_charset(self, code, mode):
+        self._emulated_escape_seq_cnt.update(['define_charset'])
+        if code in cs.MAPS:
+            if mode == "(":
+                self.g0_charset = cs.MAPS[code]
+            elif mode == ")":
+                self.g1_charset = cs.MAPS[code]
+
+    def shift_in(self):
+        self._emulated_escape_seq_cnt.update(['shift_in'])
+        self.charset = 0
+
+    def shift_out(self):
+        self._emulated_escape_seq_cnt.update(['shift_out'])
+        self.charset = 1
+
+    def report_device_attributes(self, mode=0, **kwargs):
+        self._emulated_escape_seq_cnt.update(['report_device_attributes'])
+        # We only implement "primary" DA which is the only DA request
+        # VT102 understood, see ``VT102ID`` in ``linux/drivers/tty/vt.c``.
+        if mode == 0 and not kwargs.get("private"):
+            self.write_process_input(ctrl.CSI + "?6c")
+
+    def report_device_status(self, mode):
+        self._emulated_escape_seq_cnt.update(['report_device_status'])
+        if mode == 5:  # Request for terminal status.
+            self.write_process_input(ctrl.CSI + "0n")
+        elif mode == 6:  # Request for cursor position.
+            self._unhandled_escape_seq_cnt.update(['report_device_status'])
+            x = 1
+            y = 1
+
+            self.write_process_input(ctrl.CSI + "{0};{1}R".format(y, x))
+
+    def write_process_input(self, data):
+        pass
+
+    def debug(self, *args, **kwargs):
+        pass
+
+    # Unhandled escape sequences
+    def resize(self, lines=None, columns=None):
+        self._unhandled_escape_seq_cnt.update(['resize'])
+
+    def carriage_return(self):
+        self._unhandled_escape_seq_cnt.update(['carriage_return'])
+
+    def index(self):
+        self._unhandled_escape_seq_cnt.update(['index'])
+
+    def reverse_index(self):
+        self._unhandled_escape_seq_cnt.update(['reverse_index'])
+
+    def linefeed(self):
+        self._unhandled_escape_seq_cnt.update(['linefeed'])
+
+    def tab(self):
+        self._unhandled_escape_seq_cnt.update(['tab'])
+
+    def backspace(self):
+        self._unhandled_escape_seq_cnt.update(['backspace'])
+
+    def restore_cursor(self):
+        self._unhandled_escape_seq_cnt.update(['restore_cursor'])
+
+    def insert_lines(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['insert_lines'])
+
+    def delete_lines(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['delete_lines'])
+
+    def insert_characters(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['insert_characters'])
+
+    def delete_characters(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['delete_characters'])
+
+    def erase_characters(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['erase_characters'])
+
+    def erase_in_line(self, how=0, private=False):
+        self._unhandled_escape_seq_cnt.update([('erase_in_line', how)])
+
+    def erase_in_display(self, how=0, *args, **kwargs):
+        self._unhandled_escape_seq_cnt.update([('erase_in_display', how)])
+
+    def set_tab_stop(self):
+        self._unhandled_escape_seq_cnt.update(['set_tab_stop'])
+
+    def clear_tab_stop(self, how=0):
+        self._unhandled_escape_seq_cnt.update([('clear_tab_stop', how)])
+
+    def cursor_up(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_up'])
+
+    def cursor_up1(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_up1'])
+
+    def cursor_down(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_down'])
+
+    def cursor_down1(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_down1'])
+
+    def cursor_back(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_back'])
+
+    def cursor_forward(self, count=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_forward'])
+
+    def cursor_position(self, line=None, column=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_position'])
+
+    def cursor_to_column(self, column=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_to_column'])
+
+    def cursor_to_line(self, line=None):
+        self._unhandled_escape_seq_cnt.update(['cursor_to_line'])
+
+    # Ignored escape sequences
+    def bell(self, *args):
+        self._ignored_escape_seq_cnt.update(['bell'])
+
+    def save_cursor(self):
+        self._ignored_escape_seq_cnt.update(['save_cursor'])
+
+    def alignment_display(self):
+        self._ignored_escape_seq_cnt.update(['alignment_display'])
+
+    def select_graphic_rendition(self, *attrs):
+        self._ignored_escape_seq_cnt.update(['select_graphic_rendition'])
+
+    def set_margins(self, top=None, bottom=None):
+        self._ignored_escape_seq_cnt.update(['set_margins'])
+
+    def set_title(self, param):
+        self._ignored_escape_seq_cnt.update(['set_title'])
+
+    def set_icon_name(self, param):
+        self._ignored_escape_seq_cnt.update(['set_icon_name'])

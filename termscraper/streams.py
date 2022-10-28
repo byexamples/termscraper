@@ -471,36 +471,13 @@ class Stream:
             self.use_utf8 = True
 
 
-class FilteredStream(Stream):
-    #: Control sequences, which don't require any arguments.
-    basic = {ev: "nop" for ev in Stream.basic}
-
-    #: non-CSI escape sequences.
-    escape = {ev: "nop" for ev in Stream.escape}
-
-    #: "sharp" escape sequences -- ``ESC # <N>``.
-    sharp = {ev: "nop" for ev in Stream.sharp}
-
-    #: CSI escape sequences -- ``CSI P1;P2;...;Pn <fn>``.
-    csi = {ev: "nop" for ev in Stream.csi}
-
-    #: A set of all events dispatched by the stream.
-    events = frozenset(
-        itertools.chain(
-            basic.values(),
-            escape.values(),
-            sharp.values(),
-            csi.values(),
-            ["define_charset"],
-            ["set_icon_name", "set_title"],  # OSC.
-            ["draw", "debug"]
-        )
-    )
-
-    #: A regular expression pattern matching everything what can be
-    #: considered plain text.
+class WSPassthroughStream(Stream):
+    ''' An identical implementation of Stream but the white spaces
+        characters are not considered special escape sequences to be
+        emulated and are passed directly to the Screen
+    '''
     _special = set([ctrl.ESC, ctrl.CSI_C1, ctrl.NUL, ctrl.DEL, ctrl.OSC_C1])
-    _special.update(basic)
-    _special = _special - {ctrl.LF, ctrl.VT, ctrl.FF, ctrl.CR}
+    _special.update(Stream.basic)
+    _special = _special - {ctrl.LF, ctrl.VT, ctrl.FF, ctrl.CR, ctrl.HT}
     _text_pattern = re.compile("[^" + "".join(map(re.escape, _special)) + "]+")
     del _special

@@ -25,13 +25,14 @@
 """
 
 __all__ = (
-    "Screen", "HistoryScreen", "DebugScreen", "Stream", "FilteredStream"
+    "Screen", "HistoryScreen", "DebugScreen", "LinearScreen", "Stream",
+    "WSPassthroughStream"
 )
 
 import io
 
-from .screens import Screen, HistoryScreen, DebugScreen
-from .streams import Stream, FilteredStream
+from .screens import Screen, HistoryScreen, DebugScreen, LinearScreen
+from .streams import Stream, WSPassthroughStream
 
 from .version import __version__
 
