@@ -4,8 +4,6 @@ include CHANGELOG.md
 include LICENSE
 include README.md
 
-recursive-include docs *.md
-
 recursive-include examples *.py
 recursive-include tests *.py
-recursive-include tests/captured
+recursive-include tests/captured *.input *.output
