@@ -73,8 +73,6 @@ setup(
 
     python_requires='>=3.6',
     install_requires=install_deps,
-    setup_requires=["pytest-runner"],
-    tests_require=["pytest"],
     platforms=["any"],
 
     keywords=["scraper", "pyte", "vt102", "vte", "terminal emulator"],
