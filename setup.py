@@ -80,6 +80,5 @@ setup(
     keywords=["scraper", "pyte", "vt102", "vte", "terminal emulator"],
 
     packages=find_packages(),
-    data_files=[("", ["LICENSE"])]
 )
 
