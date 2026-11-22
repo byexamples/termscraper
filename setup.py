@@ -38,7 +38,7 @@ except:
 
 # the following are the required dependencies
 install_deps = [
-        'wcwidth==0.2.5',
+        'wcwidth>=0.2.5',
     ]
 
 setup(
